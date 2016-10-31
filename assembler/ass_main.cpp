@@ -11,7 +11,7 @@
 
 #define MV2TKN(p) while(*p == ' ' || *p == '\t') p++
 #define MV2SP(p) while(*p != ' ' && *p != '\t' && *p != '\n') p++
-#define MV2NXTKN(p) while(*p != ' ' && *p != '\t') p++; while(*p == ' ' || *p == '\t') p++
+#define MV2NXTKN(p) while(*p != ' ' && *p != '\t'  && *p != '\n') p++; while(*p == ' ' || *p == '\t') p++
 #define GO2EL(p) while(*p != '\n') p++
 
 using namespace std;
@@ -114,10 +114,10 @@ int main(int argc, char *argv[]) {
 		puts("some error has occurred");
 		return 1;
 	}
-	
-	tfs = TA; dfs = DA;
-	if (tfs != 0) TEX = (char*)calloc(tfs, 1);
-	if (dfs != 0) DAT = (char*)calloc(dfs, 1);
+
+	tfs = TA*4; dfs = DA*4;
+	TEX = (char*)calloc(tfs+1, 1);
+	DAT = (char*)calloc(dfs+1, 1);
 	if (TEX == NULL || DAT == NULL) {
 		puts("memory allocation error");
 		return 1;
@@ -163,9 +163,9 @@ int main(int argc, char *argv[]) {
 		file_name = file_name.substr(0, i1) + "_text.dat";
 	else
 		file_name = file_name + "_text.dat";
-	fd = open(file_name.c_str(), O_WRONLY);
+	fd = open(file_name.c_str(), O_WRONLY|O_CREAT|O_TRUNC, 0777);
 	if (fd < 0) {
-		puts("file open error");
+		perror("main");
 		return 1;
 	}
 	p = TEX;
@@ -185,9 +185,9 @@ int main(int argc, char *argv[]) {
 		file_name = file_name.substr(0, i1) + "_data.dat";
 	else
 		file_name = file_name + "_data.dat";
-	fd = open(file_name.c_str(), O_WRONLY);
+	fd = open(file_name.c_str(), O_WRONLY|O_CREAT|O_TRUNC, 0777);
 	if (fd < 0) {
-		puts("file open error");
+		perror("main");
 		return 1;
 	}
 	p = DAT;
@@ -204,66 +204,3 @@ int main(int argc, char *argv[]) {
 	free(fc); free(TEX); free(DAT);
 	return 0;
 }
-	
-	
-	/*
-		
-			switch(STATE) {
-			case 0:
-				if (!my_strcmp(p, "section")) {
-					throw "first specify the section to write data to";
-				}
-				MV2NXTKN(p);
-				if (*p == '\n') {
-					throw "secton name is not specified";
-				}
-				if (my_strcmp(p, ".text")) {
-					STATE = 1;
-				} else if (my_strcmp(p, ".data")) {
-					STATE = 2;
-				} else {
-					throw "unknown section name";
-				}
-				MV2NXTKN(p);
-				if (*p != '\n') {
-					throw "unknown item is detected";
-				}
-				p++;
-				continue;
-			case 1:
-				
-			for(t2 = t1; t2 == ' ' || t2 == '\t' || t2 == '\0';) t2++;
-			csave = *t2;
-			*t2 = '\0';
-		
-		
-		
-			while(*p != '\n') p++;
-			p++;
-		}
-	}
-	catch (char *s) {
-		printf("%d: %s\n", LN, s);
-		return 1;
-	}
-
-	printf("file size: %ld\n", statbuf.st_size);
-	free(fc);
-	return 88;
-
-}
-
-
-
-
-int my_strcmp(char *a, char *b) {
-	while(*b != '\0') {
-		if (*a != *b) return 0;
-		a++;
-		b++;
-	}
-	if (*a != ' ' && *a != '\t' && *a != '\0') return 0;
-	return 1;
-}
-
-*/
