@@ -103,7 +103,8 @@ int main(int argc, char *argv[]) {
 
 	for(PC = 0; PC <= lastpc;) {
 		OP = TEX[PC];
-		//print_reg();
+		print_reg();
+		while(getchar() != '\n');
 		PC += 1;
 		for(opp = op_array;;opp++) {
 			if (opp->is_op == NULL) {
@@ -116,7 +117,7 @@ int main(int argc, char *argv[]) {
 			}
 		}
 	}
-	print_reg();
+
 	free(DAT);
 	free(TEX);
 	return 0;
