@@ -53,9 +53,9 @@ using namespace std;
 
 
 #define SET_RDRSRT \
-	GETRN(rs); \
-	MV2TKN(p); \
 	GETRN(rd); \
+	MV2TKN(p); \
+	GETRN(rs); \
 	MV2TKN(p); \
 	GETRN(rt); \
 	MV2TKNB(p); \

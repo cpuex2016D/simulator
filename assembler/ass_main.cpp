@@ -204,3 +204,66 @@ int main(int argc, char *argv[]) {
 	free(fc); free(TEX); free(DAT);
 	return 0;
 }
+	
+	
+	/*
+		
+			switch(STATE) {
+			case 0:
+				if (!my_strcmp(p, "section")) {
+					throw "first specify the section to write data to";
+				}
+				MV2NXTKN(p);
+				if (*p == '\n') {
+					throw "secton name is not specified";
+				}
+				if (my_strcmp(p, ".text")) {
+					STATE = 1;
+				} else if (my_strcmp(p, ".data")) {
+					STATE = 2;
+				} else {
+					throw "unknown section name";
+				}
+				MV2NXTKN(p);
+				if (*p != '\n') {
+					throw "unknown item is detected";
+				}
+				p++;
+				continue;
+			case 1:
+				
+			for(t2 = t1; t2 == ' ' || t2 == '\t' || t2 == '\0';) t2++;
+			csave = *t2;
+			*t2 = '\0';
+		
+		
+		
+			while(*p != '\n') p++;
+			p++;
+		}
+	}
+	catch (char *s) {
+		printf("%d: %s\n", LN, s);
+		return 1;
+	}
+
+	printf("file size: %ld\n", statbuf.st_size);
+	free(fc);
+	return 88;
+
+}
+
+
+
+
+int my_strcmp(char *a, char *b) {
+	while(*b != '\0') {
+		if (*a != *b) return 0;
+		a++;
+		b++;
+	}
+	if (*a != ' ' && *a != '\t' && *a != '\0') return 0;
+	return 1;
+}
+
+*/
