@@ -56,7 +56,7 @@ int main(int argc, char *argv[]) {
 		return 1;
 	}
 	fsize = statbuf.st_size;
-	lastpc = (fsize + 3)/4;
+	lastpc = (fsize + 3)/4 - 1;
 	p = malloc(fsize+4);
 	if (p == NULL) {
 		puts("malloc error");
