@@ -12,10 +12,17 @@ min_caml_start:
 	sw	%r31, 4(%r30)
 	addi	%r30, %r30, 8
 	#jal	min_caml_print
+	out	%r1
+	srl	%r1, %r1, 8
+	out	%r1
+	srl	%r1, %r1, 8
+	out	%r1
+	srl	%r1, %r1, 8
+	out	%r1
 	addi	%r30, %r30, -8
 	lw	%r31, 4(%r30)
-	j	for_halt
 	#hlt
+	in	%r1
 fib.10:
 	addi	%r2, %r0, 0
 	bne	%r1, %r2, be_else.26
@@ -49,6 +56,3 @@ be_else.27:
 	lw	%r2, 4(%r30)
 	add	%r1, %r2, %r1
 	jr	%r31
-
-for_halt:
-	addi %r1, %r1, 0
