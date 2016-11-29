@@ -50,6 +50,34 @@ using namespace std;
 	} else throw "invalid arguments"
 		
 
+#define GETFN(reg) \
+	if (*(p++) != '%' || *(p++) != 'f') throw "not valid register"; \
+	if ('0' == *p || ('4' <= *p && *p <= '9')) { \
+		reg = *p - '0'; \
+		p++; \
+		TECHK; \
+	} else if (*p == '1' || *p == '2') { \
+		p++; \
+		if ('0' <= *p && *p <= '9') { \
+			reg = (*(p-1) - '0') * 10 + *p - '0'; \
+			p++; \
+			TECHK; \
+		} else { \
+			reg = *(p-1) - '0'; \
+			TECHK; \
+		} \
+	} else if (*p == '3') { \
+		p++; \
+		if ('0' == *p || *p == '1') { \
+			reg = 30 + *p - '0'; \
+			p++; \
+			TECHK; \
+		} else { \
+			reg = 3; \
+			TECHK; \
+		} \
+	} else throw "invalid arguments"
+
 
 
 #define SET_RDRSRT \
@@ -81,6 +109,14 @@ using namespace std;
 	MV2TKNB(p); \
 	NLCHK
 
+#define SET_FDFSFT \
+	GETFN(fd); \
+	MV2TKN(p); \
+	GETFN(fs); \
+	MV2TKN(p); \
+	GETFN(ft); \
+	MV2TKNB(p); \
+	NLCHK
 
 	/*
 	{\
@@ -165,7 +201,7 @@ void sz_byte(char *p) {
 }
 
 void op_byte(char *p) {
-	char c;
+	//char c;
 	/*
 	if (STATE == 1) {
 		while(*p != '\n') {
@@ -184,7 +220,7 @@ void op_byte(char *p) {
 	}
 	*/
 	if ('0' <= *p && *p <= '9')
-		c = (char)strtol(p, &p, 0);
+		;//c = (char)strtol(p, &p, 0);
 	else throw "not implemented byte notation";
 	MV2TKNB(p);
 	NLCHK;
@@ -268,7 +304,7 @@ void op_ori(char *p) {
 	char rs, rt;
 	int c;
 	SET_RTRSC;
-	op = 0x38000000 | (rs << 21) | (rt << 16) | (c & 0xFFFF);
+	op = 0x34000000 | (rs << 21) | (rt << 16) | (c & 0xFFFF);
 	STORE_OP;
 	return;
 }
@@ -585,18 +621,18 @@ void op_bf_s(char *p) {
 
 void op_add_s(char *p) {
 	uint32_t op;
-	char rs, rd, rt;
-	SET_RDRSRT;
-	op = 0x46000000 | (rt << 16) | (rs << 11) | (rd << 6);
+	char fd, fs, ft;
+	SET_FDFSFT;
+	op = 0x46000000 | (ft << 16) | (fs << 11) | (fd << 6);
 	STORE_OP;
 	return;
 }
 
 void op_sub_s(char *p) {
 	uint32_t op;
-	char rs, rd, rt;
-	SET_RDRSRT;
-	op = 0x46000001 | (rt << 16) | (rs << 11) | (rd << 6);
+	char fd, fs, ft;
+	SET_FDFSFT;
+	op = 0x46000001 | (ft << 16) | (fs << 11) | (fd << 6);
 	STORE_OP;
 	return;
 }
@@ -604,9 +640,9 @@ void op_sub_s(char *p) {
 
 void op_mul_s(char *p) {
 	uint32_t op;
-	char rs, rd, rt;
-	SET_RDRSRT;
-	op = 0x46000002 | (rt << 16) | (rs << 11) | (rd << 6);
+	char fd, fs, ft;
+	SET_FDFSFT;
+	op = 0x46000002 | (ft << 16) | (fs << 11) | (fd << 6);
 	STORE_OP;
 	return;
 }
@@ -614,9 +650,9 @@ void op_mul_s(char *p) {
 
 void op_div_s(char *p) {
 	uint32_t op;
-	char rs, rd, rt;
-	SET_RDRSRT;
-	op = 0x46000003 | (rt << 16) | (rs << 11) | (rd << 6);
+	char fd, fs, ft;
+	SET_FDFSFT;
+	op = 0x46000003 | (ft << 16) | (fs << 11) | (fd << 6);
 	STORE_OP;
 	return;
 }
@@ -624,9 +660,9 @@ void op_div_s(char *p) {
 void op_mov_s(char *p) {
 	uint32_t op;
 	char fd, ft;
-	GETRN(fd);
+	GETFN(fd);
 	MV2TKN(p);
-	GETRN(ft);
+	GETFN(ft);
 	MV2TKNB(p);
 	NLCHK;
 	op = 0x46000006 | (ft << 16) | (fd << 6);
@@ -638,12 +674,38 @@ void op_mov_s(char *p) {
 void op_neg_s(char *p) {
 	uint32_t op;
 	char fd, ft;
-	GETRN(fd);
+	GETFN(fd);
 	MV2TKN(p);
-	GETRN(ft);
+	GETFN(ft);
 	MV2TKNB(p);
 	NLCHK;
 	op = 0x46000007 | (ft << 16) | (fd << 6);
+	STORE_OP;
+	return;
+}
+
+void op_abs_s(char *p) {
+	uint32_t op;
+	char fd, ft;
+	GETFN(fd);
+	MV2TKN(p);
+	GETFN(ft);
+	MV2TKNB(p);
+	NLCHK;
+	op = 0x46000005 | (ft << 16) | (fd << 6);
+	STORE_OP;
+	return;
+}
+
+void op_sqrt_s(char *p) {
+	uint32_t op;
+	char fd, ft;
+	GETFN(fd);
+	MV2TKN(p);
+	GETFN(ft);
+	MV2TKNB(p);
+	NLCHK;
+	op = 0x46000004 | (ft << 16) | (fd << 6);
 	STORE_OP;
 	return;
 }
@@ -659,7 +721,7 @@ void op_c_eq_s(char *p) {
 	GETRN(ft);
 	MV2TKNB(p);
 	NLCHK;
-	if (cc < 0 || cc >= 8) "invalid arguments";
+	if (cc < 0 || cc >= 8) throw "invalid arguments";
 	op = 0x46000032 | (ft << 16) | (fs << 11) | (cc << 8);
 	STORE_OP;
 	return;
@@ -675,7 +737,7 @@ void op_c_lt_s(char *p) {
 	GETRN(ft);
 	MV2TKNB(p);
 	NLCHK;
-	if (cc < 0 || cc >= 8) "invalid arguments";
+	if (cc < 0 || cc >= 8) throw "invalid arguments";
 	op = 0x4600003C | (ft << 16) | (fs << 11) | (cc << 8);
 	STORE_OP;
 	return;
@@ -691,7 +753,7 @@ void op_c_le_s(char *p) {
 	GETRN(ft);
 	MV2TKNB(p);
 	NLCHK;
-	if (cc < 0 || cc >= 8) "invalid arguments";
+	if (cc < 0 || cc >= 8) throw "invalid arguments";
 	op = 0x4600003E | (ft << 16) | (fs << 11) | (cc << 8);
 	STORE_OP;
 	return;
@@ -718,10 +780,36 @@ void op_sw_s(char *p) {
 }
 
 
+void op_ftoi(char *p) {
+	uint32_t op;
+	char rt, fs;
+	GETRN(rt);
+	MV2TKN(p);
+	GETFN(fs);
+	MV2TKNB(p);
+	NLCHK;
+	op = 0xE0000000 | (fs << 21) | (rt << 16);
+	STORE_OP;
+	return;
+}
 
-map<string, void (*) (char *) > SZM = {{".section", sz_section}, {".align", nop}, {".byte", sz_byte}, {".global", nop}, {"add", sz_gop}, {"addi", sz_gop}, {"sub", sz_gop}, {"and", sz_gop}, {"andi", sz_gop}, {"or", sz_gop}, {"ori", sz_gop}, {"nor", sz_gop}, {"sll", sz_gop}, {"srl", sz_gop}, {"slt", sz_gop}, {"slti", sz_gop}, {"beq", sz_gop}, {"bne", sz_gop}, {"j", sz_gop}, {"jal", sz_gop}, {"jr", sz_gop}, {"jalr", sz_gop}, {"lw", sz_gop}, {"lui", sz_gop}, {"sw", sz_gop}, {"in", sz_gop}, {"out", sz_gop}, {"bt.s", sz_gop}, {"bf.s", sz_gop}, {"add.s", sz_gop}, {"sub.s", sz_gop}, {"mul.s", sz_gop}, {"div.s", sz_gop}, {"mov.s", sz_gop}, {"neg.s", sz_gop}, {"c.eq.s", sz_gop}, {"c.lt.s", sz_gop}, {"c.le.s", sz_gop}, {"lw.s", sz_gop}, {"sw.s", sz_gop}/*, {"la", sz_gop}*/};
+void op_itof(char *p) {
+	uint32_t op;
+	char ft, rs;
+	GETFN(ft);
+	MV2TKN(p);
+	GETRN(rs);
+	MV2TKNB(p);
+	NLCHK;
+	op = 0xC0000000 | (rs << 21) | (ft << 16);
+	STORE_OP;
+	return;
+}
 
-map<string, void (*) (char *) > OPM = {{".section", sz_section}, {".align", sz_align}, {".byte", op_byte}, {".global", nop}, {"add", op_add}, {"addi", op_addi}, {"sub", op_sub}, {"and", op_and}, {"andi", op_andi}, {"or", op_or}, {"ori", op_ori}, {"nor", op_nor}, {"sll", op_sll}, {"srl", op_srl}, {"slt", op_slt}, {"slti", op_slti}, {"beq", op_beq}, {"bne", op_bne}, {"j", op_j}, {"jal", op_jal}, {"jr", op_jr}, {"jalr", op_jalr}, {"lw", op_lw}, {"lui", op_lui}, {"sw", op_sw}, {"in", op_in}, {"out", op_out}, {"bt.s", op_bt_s}, {"bf.s", op_bf_s}, {"add.s", op_add_s}, {"sub.s", op_sub_s}, {"mul.s", op_mul_s}, {"div.s", op_div_s}, {"mov.s", op_mov_s}, {"neg.s", op_neg_s}, {"c.eq.s", op_c_eq_s}, {"c.lt.s", op_c_lt_s}, {"c.le.s", op_c_le_s}, {"lw.s", op_lw_s}, {"sw.s", op_sw_s}};
+
+map<string, void (*) (char *) > SZM = {{".section", sz_section}, {".align", nop}, {".byte", sz_byte}, {".global", nop}, {"add", sz_gop}, {"addi", sz_gop}, {"sub", sz_gop}, {"and", sz_gop}, {"andi", sz_gop}, {"or", sz_gop}, {"ori", sz_gop}, {"nor", sz_gop}, {"sll", sz_gop}, {"srl", sz_gop}, {"slt", sz_gop}, {"slti", sz_gop}, {"beq", sz_gop}, {"bne", sz_gop}, {"j", sz_gop}, {"jal", sz_gop}, {"jr", sz_gop}, {"jalr", sz_gop}, {"lw", sz_gop}, {"lui", sz_gop}, {"sw", sz_gop}, {"in", sz_gop}, {"out", sz_gop}, {"bt.s", sz_gop}, {"bf.s", sz_gop}, {"add.s", sz_gop}, {"sub.s", sz_gop}, {"mul.s", sz_gop}, {"div.s", sz_gop}, {"mov.s", sz_gop}, {"neg.s", sz_gop}, {"abs.s", sz_gop}, {"sqrt.s", sz_gop}, {"c.eq.s", sz_gop}, {"c.lt.s", sz_gop}, {"c.le.s", sz_gop}, {"lw.s", sz_gop}, {"sw.s", sz_gop}, {"ftoi", sz_gop}, {"itof", sz_gop}/*, {"la", sz_gop}*/};
+
+map<string, void (*) (char *) > OPM = {{".section", sz_section}, {".align", sz_align}, {".byte", op_byte}, {".global", nop}, {"add", op_add}, {"addi", op_addi}, {"sub", op_sub}, {"and", op_and}, {"andi", op_andi}, {"or", op_or}, {"ori", op_ori}, {"nor", op_nor}, {"sll", op_sll}, {"srl", op_srl}, {"slt", op_slt}, {"slti", op_slti}, {"beq", op_beq}, {"bne", op_bne}, {"j", op_j}, {"jal", op_jal}, {"jr", op_jr}, {"jalr", op_jalr}, {"lw", op_lw}, {"lui", op_lui}, {"sw", op_sw}, {"in", op_in}, {"out", op_out}, {"bt.s", op_bt_s}, {"bf.s", op_bf_s}, {"add.s", op_add_s}, {"sub.s", op_sub_s}, {"mul.s", op_mul_s}, {"div.s", op_div_s}, {"mov.s", op_mov_s}, {"neg.s", op_neg_s}, {"abs.s", op_abs_s}, {"sqrt.s", op_sqrt_s}, {"c.eq.s", op_c_eq_s}, {"c.lt.s", op_c_lt_s}, {"c.le.s", op_c_le_s}, {"lw.s", op_lw_s}, {"sw.s", op_sw_s}, {"ftoi", op_ftoi}, {"itof", op_itof}};
 
 
 
