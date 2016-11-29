@@ -12,8 +12,6 @@ using namespace std;
 
 
 #define STORE_OP \
-	if (STATE == 2)\
-		throw "trying to write an op to undesirable area"; \
 	*((uint32_t *)&TEX[TA*4]) = op; \
 	TA += 1
 
@@ -79,7 +77,6 @@ using namespace std;
 	} else throw "invalid arguments"
 
 
-
 #define SET_RDRSRT \
 	GETRN(rd); \
 	MV2TKN(p); \
@@ -118,128 +115,35 @@ using namespace std;
 	MV2TKNB(p); \
 	NLCHK
 
-	/*
-	{\
-		char *f93ghc, bv9w20bv;\
-		map<string, int>::iterator i3ga;\
-		for(f93ghc = p; *f93ghc != ' ' && *f93ghc != '\t' && *f93ghc != '\n';) f93ghc++;\
-		bv9w20bv = *f93ghc;\
-		i3ga = LBM.find(p);\
-		*f93ghc = bv9w20bv;\
-		if (p == LBM.end()) \
-			throw "unknown lable";\
-		c = i3ga->second;\
-		while(*p != ' ' && *p != '\t' && *p != '\n') p++; while(*p == ' ' || *p == '\t') p++;\
-		if (*p != '\n') throw "unknown arguments";\
-	}\
-	if (rt & 0xE0 || rs & 0xE0) throw "out of valid reg range"\
-	*/
+#define SET_FTCRS \
+	GETFN(ft); \
+	MV2TKN(p); \
+	if (!('0' <= *p && *p <= '9')) throw "invalid arguments"; \
+	c = (int)strtol(p, &p, 0); \
+	if (*(p++) != '(') throw "invalid arguments"; \
+	GETRN(rs); \
+	if (*(p++) != ')') throw "invalid arguments"; \
+	MV2TKNB(p); \
+	NLCHK
 
-
-extern int LN;
 extern int TA, DA;
-extern int STATE;
 extern char *TEX, *DAT;
 typedef map<string, int (*) (char *) >::iterator mi;
 extern map<string, int> LBM;
 
 
 
-int my_strcmp(char *p, char const *s) {
-	while(*s != '\0') {
-		if (*p != *s) return 0;
-		p++;
-		s++;
-	}
-	if (*p != ' ' && *p != '\n' && *p != '\t') return 0;
-	else return 1;
-}
-
-
-void sz_section(char *p) {
-	if (my_strcmp(p, "\".text\"")) {
-		STATE = 1;
-	} else if (my_strcmp(p, "\".rodata\"")) {
-		STATE = 2;
-	} else throw "unknown section type";
-	MV2NXTKNB(p);
-	if (*p != '\n')
-			throw "unknown arguments";
-	return;
-}
-
-void sz_align(char *p) {
-	int i;
-	i = (int)strtol(p, &p, 0);
-	if (STATE == 1) {
-		int r = TA%i;
-		if (r != 0)
-			TA += i - r;
-	} else {
-		int r = DA%i;
-		if (r != 0)
-			DA += i - r;
-	}
-	return;
-}
-
-void sz_byte(char *p) {
-	/*
-	int i = 0;
-	while(*p != '\n') {
-		i++;
-		strtol(p, &p, 0);
-		MV2TKN(p);
-	}
-	if (STATE == 1)
-		TA += i;
-	else
-		DA += i;
-	*/
-	DA += 1;
-	return;
-}
-
-void op_byte(char *p) {
-	//char c;
-	/*
-	if (STATE == 1) {
-		while(*p != '\n') {
-			c = (char)strtol(p, &p, 0);
-			TEX[TA] = c;
-			TA++;
-			MV2TKN(p);
-		}
-	} else {
-		while(*p != '\n') {
-			c = (char)strtol(p, &p, 0);
-			DAT[DA] = c;
-			DA++;
-			MV2TKN(p);
-		}
-	}
-	*/
-	if ('0' <= *p && *p <= '9')
-		;//c = (char)strtol(p, &p, 0);
-	else throw "not implemented byte notation";
-	MV2TKNB(p);
-	NLCHK;
-	return;
-}
-
 void nop(char *p) {
 	return;
 }
 
 void sz_gop(char *p) {
-	/*
-	if (STATE == 2) {
-		DA += 4;
-	} else {
-		TA += 4;
-	}
-	*/
 	TA += 1;
+	return;
+}
+
+void sz_la(char *p) {
+	TA += 2;
 	return;
 }
 
@@ -716,9 +620,9 @@ void op_c_eq_s(char *p) {
 	if (!('0' <= *p && *p <= '9')) throw "invalid arguments";
 	cc = (char) strtol(p, &p, 0);
 	MV2TKN(p);
-	GETRN(fs);
+	GETFN(fs);
 	MV2TKN(p);
-	GETRN(ft);
+	GETFN(ft);
 	MV2TKNB(p);
 	NLCHK;
 	if (cc < 0 || cc >= 8) throw "invalid arguments";
@@ -732,9 +636,9 @@ void op_c_lt_s(char *p) {
 	if (!('0' <= *p && *p <= '9')) throw "invalid arguments";
 	cc = (char) strtol(p, &p, 0);
 	MV2TKN(p);
-	GETRN(fs);
+	GETFN(fs);
 	MV2TKN(p);
-	GETRN(ft);
+	GETFN(ft);
 	MV2TKNB(p);
 	NLCHK;
 	if (cc < 0 || cc >= 8) throw "invalid arguments";
@@ -748,9 +652,9 @@ void op_c_le_s(char *p) {
 	if (!('0' <= *p && *p <= '9')) throw "invalid arguments";
 	cc = (char) strtol(p, &p, 0);
 	MV2TKN(p);
-	GETRN(fs);
+	GETFN(fs);
 	MV2TKN(p);
-	GETRN(ft);
+	GETFN(ft);
 	MV2TKNB(p);
 	NLCHK;
 	if (cc < 0 || cc >= 8) throw "invalid arguments";
@@ -761,20 +665,20 @@ void op_c_le_s(char *p) {
 
 void op_lw_s(char *p) {
 	uint32_t op;
-	char rt, rs;
+	char ft, rs;
 	int c;
-	SET_RTCRS;
-	op = 0xC4000000 | (rs << 21) | (rt << 16) | (c & 0xFFFF);
+	SET_FTCRS;
+	op = 0xC4000000 | (rs << 21) | (ft << 16) | (c & 0xFFFF);
 	STORE_OP;
 	return;
 }
 
 void op_sw_s(char *p) {
 	uint32_t op;
-	char rt, rs;
+	char ft, rs;
 	int c;
-	SET_RTCRS;
-	op = 0xE4000000 | (rs << 21) | (rt << 16) | (c & 0xFFFF);
+	SET_FTCRS;
+	op = 0xE4000000 | (rs << 21) | (ft << 16) | (c & 0xFFFF);
 	STORE_OP;
 	return;
 }
@@ -807,9 +711,35 @@ void op_itof(char *p) {
 }
 
 
-map<string, void (*) (char *) > SZM = {{".section", sz_section}, {".align", nop}, {".byte", sz_byte}, {".global", nop}, {"add", sz_gop}, {"addi", sz_gop}, {"sub", sz_gop}, {"and", sz_gop}, {"andi", sz_gop}, {"or", sz_gop}, {"ori", sz_gop}, {"nor", sz_gop}, {"sll", sz_gop}, {"srl", sz_gop}, {"slt", sz_gop}, {"slti", sz_gop}, {"beq", sz_gop}, {"bne", sz_gop}, {"j", sz_gop}, {"jal", sz_gop}, {"jr", sz_gop}, {"jalr", sz_gop}, {"lw", sz_gop}, {"lui", sz_gop}, {"sw", sz_gop}, {"in", sz_gop}, {"out", sz_gop}, {"bt.s", sz_gop}, {"bf.s", sz_gop}, {"add.s", sz_gop}, {"sub.s", sz_gop}, {"mul.s", sz_gop}, {"div.s", sz_gop}, {"mov.s", sz_gop}, {"neg.s", sz_gop}, {"abs.s", sz_gop}, {"sqrt.s", sz_gop}, {"c.eq.s", sz_gop}, {"c.lt.s", sz_gop}, {"c.le.s", sz_gop}, {"lw.s", sz_gop}, {"sw.s", sz_gop}, {"ftoi", sz_gop}, {"itof", sz_gop}/*, {"la", sz_gop}*/};
+void op_la(char *p) {
+	uint32_t op;
+	char rt, *q, tmp;
+	uint32_t l;
+	map<string, int>::iterator itr;
+	GETRN(rt);
+	MV2TKN(p);
+	q = p;
+	MV2SP(q);
+	tmp = *q;
+	*q = '\0';
+	itr = LBM.find(p);
+	*q = tmp;
+	p = q;
+	if (itr == LBM.end()) throw "unknown lable referenced";
+	l = (uint32_t)itr->second;
+	op = 0x34000000 | (rt << 16) | (l & 0xFFFF);
+	STORE_OP;
+	op = 0x3C000000 | (rt << 16) | (l >> 16);
+	STORE_OP;
+	return;
+}
 
-map<string, void (*) (char *) > OPM = {{".section", sz_section}, {".align", sz_align}, {".byte", op_byte}, {".global", nop}, {"add", op_add}, {"addi", op_addi}, {"sub", op_sub}, {"and", op_and}, {"andi", op_andi}, {"or", op_or}, {"ori", op_ori}, {"nor", op_nor}, {"sll", op_sll}, {"srl", op_srl}, {"slt", op_slt}, {"slti", op_slti}, {"beq", op_beq}, {"bne", op_bne}, {"j", op_j}, {"jal", op_jal}, {"jr", op_jr}, {"jalr", op_jalr}, {"lw", op_lw}, {"lui", op_lui}, {"sw", op_sw}, {"in", op_in}, {"out", op_out}, {"bt.s", op_bt_s}, {"bf.s", op_bf_s}, {"add.s", op_add_s}, {"sub.s", op_sub_s}, {"mul.s", op_mul_s}, {"div.s", op_div_s}, {"mov.s", op_mov_s}, {"neg.s", op_neg_s}, {"abs.s", op_abs_s}, {"sqrt.s", op_sqrt_s}, {"c.eq.s", op_c_eq_s}, {"c.lt.s", op_c_lt_s}, {"c.le.s", op_c_le_s}, {"lw.s", op_lw_s}, {"sw.s", op_sw_s}, {"ftoi", op_ftoi}, {"itof", op_itof}};
+
+
+
+map<string, void (*) (char *) > SZM = {{".align", nop}, {".global", nop}, {"add", sz_gop}, {"addi", sz_gop}, {"sub", sz_gop}, {"and", sz_gop}, {"andi", sz_gop}, {"or", sz_gop}, {"ori", sz_gop}, {"nor", sz_gop}, {"sll", sz_gop}, {"srl", sz_gop}, {"slt", sz_gop}, {"slti", sz_gop}, {"beq", sz_gop}, {"bne", sz_gop}, {"j", sz_gop}, {"jal", sz_gop}, {"jr", sz_gop}, {"jalr", sz_gop}, {"lw", sz_gop}, {"lui", sz_gop}, {"sw", sz_gop}, {"in", sz_gop}, {"out", sz_gop}, {"bt.s", sz_gop}, {"bf.s", sz_gop}, {"add.s", sz_gop}, {"sub.s", sz_gop}, {"mul.s", sz_gop}, {"div.s", sz_gop}, {"mov.s", sz_gop}, {"neg.s", sz_gop}, {"abs.s", sz_gop}, {"sqrt.s", sz_gop}, {"c.eq.s", sz_gop}, {"c.lt.s", sz_gop}, {"c.le.s", sz_gop}, {"lw.s", sz_gop}, {"sw.s", sz_gop}, {"ftoi", sz_gop}, {"itof", sz_gop}, {"la", sz_la}};
+
+map<string, void (*) (char *) > OPM = {{".align", nop}, {".global", nop}, {"add", op_add}, {"addi", op_addi}, {"sub", op_sub}, {"and", op_and}, {"andi", op_andi}, {"or", op_or}, {"ori", op_ori}, {"nor", op_nor}, {"sll", op_sll}, {"srl", op_srl}, {"slt", op_slt}, {"slti", op_slti}, {"beq", op_beq}, {"bne", op_bne}, {"j", op_j}, {"jal", op_jal}, {"jr", op_jr}, {"jalr", op_jalr}, {"lw", op_lw}, {"lui", op_lui}, {"sw", op_sw}, {"in", op_in}, {"out", op_out}, {"bt.s", op_bt_s}, {"bf.s", op_bf_s}, {"add.s", op_add_s}, {"sub.s", op_sub_s}, {"mul.s", op_mul_s}, {"div.s", op_div_s}, {"mov.s", op_mov_s}, {"neg.s", op_neg_s}, {"abs.s", op_abs_s}, {"sqrt.s", op_sqrt_s}, {"c.eq.s", op_c_eq_s}, {"c.lt.s", op_c_lt_s}, {"c.le.s", op_c_le_s}, {"lw.s", op_lw_s}, {"sw.s", op_sw_s}, {"ftoi", op_ftoi}, {"itof", op_itof}, {"la", op_la}};
 
 
 
