@@ -727,9 +727,9 @@ void op_la(char *p) {
 	p = q;
 	if (itr == LBM.end()) throw "unknown lable referenced";
 	l = (uint32_t)itr->second;
-	op = 0x34000000 | (rt << 16) | (l & 0xFFFF);
-	STORE_OP;
 	op = 0x3C000000 | (rt << 16) | (l >> 16);
+	STORE_OP;
+	op = 0x34000000 | (rt << 21) | (rt << 16) | (l & 0xFFFF);
 	STORE_OP;
 	return;
 }
