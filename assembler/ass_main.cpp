@@ -64,17 +64,35 @@ int slblchk(char *p, char *slbl) {
 	}
 }
 
+void print_line(FILE *file, char *p) {
+	putc(*p, file);
+	while(*p != '\n') {
+		p++;
+		putc(*p, file);
+	}
+}
+void print_numbered_line(FILE *file, char *p, int n) {
+	fprintf(file, "%d", n);
+	print_line(file, p);
+}
+
 int main(int argc, char *argv[]) {
 	int ln, tsln, teln, dsln; // num of currently parsing line
 	int fd, len, r, rv, tfs, dfs;
 	struct stat statbuf;
 	char *fc, *flast, *p, *dstart, *dlast, *tstart, *tentry;
-	if (argc <= 1) {
+	FILE *numbered_file;
+	if (argc <= 2) {
 		puts("too few arguments");
 		return 1;
 	}
 	fd = open(argv[1], O_RDONLY);
 	if (fd <= 0) {
+		perror("main");
+		return 1;
+	}
+	numbered_file = fopen(argv[2], "w");
+	if (numbered_file == NULL) {
 		perror("main");
 		return 1;
 	}
@@ -223,13 +241,14 @@ int main(int argc, char *argv[]) {
 		
 		/* text section analysis */
 		TA = 0; ln = teln; p = tentry;
-		while(p <= flast) {
+		for(char *p0 = p; p <= flast; p0 = p) {
 			char c, *q;
 			mi i;
 			
 			
 			MV2TKN(p);
 			if (*p == '\n') {
+				print_line(numbered_file, p0);
 				ln++; p++;
 				continue;
 			}
@@ -240,11 +259,13 @@ int main(int argc, char *argv[]) {
 			i = SZM.find(p);
 			*q = c;
 			if (i != SZM.end()) {
+				print_numbered_line(numbered_file, p0, TA);
 				MV2TKN(q);
 				(i->second)(q);
 				p = q;
 				GO2EL(p);
 			} else {
+				print_line(numbered_file, p0);
 				q--;
 				if (*q == ':' && p < q) {
 					*q = '\0';
@@ -445,6 +466,7 @@ int main(int argc, char *argv[]) {
 		p += rv;
 	}
 	close(fd);
+	fclose(numbered_file);
 	free(fc); free(TEX); free(DAT);
 	return 0;
 }
