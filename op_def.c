@@ -284,7 +284,7 @@ void op_in(void) {
 
 void op_out(void) {
 	int rt = GET_RT(OP);
-	fwrite(&GPR[rt], 4, 1, stdout);
+	fwrite((char*)&GPR[rt], 1, 1, stdout);
 	return;
 }
 
@@ -359,7 +359,7 @@ void op_lw_s(void) {
 	int addr;
 	addr = GPR[rs]+((c&0x8000?0xFFFF0000:0) | c);
 	if (!(0 <= addr && addr < 0x80000)) {
-		fprintf(stderr, "overflow: trying to lw from %X\n", addr);
+		fprintf(stderr, "overflow: trying to lw_s from %X\n", addr);
 		exit(1);
 	}
 	FPR[ft] = *((float*)&DAT[addr]);
@@ -371,7 +371,7 @@ void op_sw_s(void) {
 	int addr;
 	addr = GPR[rs]+((c&0x8000?0xFFFF0000:0) | c);
 	if (!(0 <= addr && addr < 0x80000)) {
-		fprintf(stderr, "overflow: trying to lw from %X\n", addr);
+		fprintf(stderr, "overflow: trying to sw_s to %X\n", addr);
 		exit(1);
 	}
 	*((float*)&DAT[addr]) = FPR[ft];
@@ -386,7 +386,7 @@ int is_lui(void) {
 
 void op_lui(void) {
 	int rt = GET_RT(OP), c = GET_SC(OP);
-	GPR[rt] = (GPR[rt] & 0xFFFF) | (c << 16);
+	GPR[rt] = c << 16;
 	return;
 }
 
