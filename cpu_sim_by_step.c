@@ -19,6 +19,8 @@ uint32_t OP = 0;
 uint32_t *TEX = NULL;
 uint32_t *DAT = NULL;
 unsigned char FPCC = 0;
+FILE *IFILE;
+
 
 /*
 void print_reg(void) {
@@ -46,7 +48,7 @@ int main(int argc, char *argv[]) {
 	void *p;
 	struct stat statbuf;
 	op_set *opp;
-	if (argc < 3) {
+	if (argc < 4) {
 		fprintf(stderr, "too few arguments\n");
 		return 0;
 	}
@@ -109,6 +111,12 @@ int main(int argc, char *argv[]) {
 		p += rv;
 	}
 	close(fd);
+
+	IFILE = fopen(argv[3], "r");
+	if (IFILE == NULL) {
+		perror("main");
+		return 1;
+	}
 
 	GPR[0] = 0;
 	GPR[29] = fsize/4;
