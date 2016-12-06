@@ -1,5 +1,8 @@
 #include<stdint.h>
 #include<stdio.h>
+#include<stdlib.h>
+#include<math.h>
+
 extern uint32_t PC;
 extern uint32_t GPR[];
 extern float FPR[];
@@ -81,7 +84,7 @@ int is_in(void) {
 	return (OP & IJ_MASK) == 0x68000000;
 }
 int is_out(void) {
-	return (OP & IJ_MASK) == 0x69000000;
+	return (OP & IJ_MASK) == 0x6C000000;
 }
 int is_bt_s(void) {
 	return (OP & (FL_MASK|0x00030000)) == 0x45010000;
@@ -129,7 +132,7 @@ int is_sw_s(void) {
 #define GET_FT(x) ((0x001F0000 & (x)) >> 16)
 #define GET_FS(x) ((0x0000F800 & (x)) >> 11)
 #define GET_FD(x) ((0x000007C0 & (x)) >> 6)
-#define GET_CCC(x) ((0x00000700) & (x) >> 8)
+#define GET_CCC(x) ((0x00000700 & (x)) >> 8)
 #define GET_COND(x) (0x0000000F & (x))
 
 void op_add(void) {
@@ -194,13 +197,13 @@ void op_srl(void) {
 
 void op_slt(void) {
 	int rs = GET_RS(OP), rt = GET_RT(OP), rd = GET_RD(OP);
-	GPR[rd] = GPR[rs] < GPR[rt];
+	GPR[rd] = (int32_t)GPR[rs] <= (int32_t)GPR[rt];
 	return;
 }
 
 void op_slti(void) {
 	int rs = GET_RS(OP), rt = GET_RT(OP), c = GET_SC(OP);
-	GPR[rt] = GPR[rs] < ((c&0x8000?0xFFFF0000:0) | c);
+	GPR[rt] = (int32_t)GPR[rs] <= (int32_t)((c&0x8000?0xFFFF0000:0) | c);
 	return;
 }
 
@@ -240,27 +243,42 @@ void op_jr(void) {
 }
 
 void op_jalr(void) {
-	int rs = GET_RS(OP);
-	GPR[31] = PC;
+	int rs = GET_RS(OP), temp;
+	temp = PC;
 	PC = GPR[rs];
+	GPR[31] = temp;
 	return;
 }
 
 void op_lw(void) {
 	int rs = GET_RS(OP), rt = GET_RT(OP), c = GET_SC(OP);
-	GPR[rt] = DAT[GPR[rs]+c];
+	int addr;
+	addr = GPR[rs]+((c&0x8000?0xFFFF0000:0) | c);
+	if (!(0 <= addr && addr < 0x80000)) {
+		fprintf(stderr, "overflow: trying to lw from %X\n", addr);
+		exit(1);
+	}
+	GPR[rt] = DAT[addr];
 	return;
 }
 
 void op_sw(void) {
 	int rs = GET_RS(OP), rt = GET_RT(OP), c = GET_SC(OP);
-	DAT[GPR[rs]+c] = GPR[rt];
+	int addr;
+	addr = GPR[rs]+((c&0x8000?0xFFFF0000:0) | c);
+	if (!(0 <= addr && addr < 0x80000)) {
+		fprintf(stderr, "overflow: trying to sw to %X\n", addr);
+		exit(1);
+	}
+	DAT[addr] = GPR[rt];
 	return;
 }
 
 void op_in(void) {
 	int rt = GET_RT(OP);
+	fprintf(stderr, ">");
 	fread(&GPR[rt], 4, 1, stdin);
+	fprintf(stderr, "\n");
 	return;
 }
 
@@ -329,19 +347,34 @@ void op_c_s(void) {
 		if (!(FPR[fs] < FPR[ft])) FPCC ^= 1 << cc;
 	} else if (cond == 14) {
 		if (!(FPR[fs] <= FPR[ft])) FPCC ^= 1 << cc;
+	} else {
+		fprintf(stderr, "undefined c._.s operation: %d\n", cond);
+		exit(1);
 	}
 	return;
 }
 
 void op_lw_s(void) {
 	int rs = GET_RS(OP), ft = GET_FT(OP), c = GET_SC(OP);
-	FPR[ft] = *((float*)&DAT[GPR[rs]+((c&0x8000?0xFFFF0000:0) | c)]);
+	int addr;
+	addr = GPR[rs]+((c&0x8000?0xFFFF0000:0) | c);
+	if (!(0 <= addr && addr < 0x80000)) {
+		fprintf(stderr, "overflow: trying to lw from %X\n", addr);
+		exit(1);
+	}
+	FPR[ft] = *((float*)&DAT[addr]);
 	return;
 }
 
 void op_sw_s(void) {
 	int rs = GET_RS(OP), ft = GET_FT(OP), c = GET_SC(OP);
-	*((float*)&DAT[GPR[rs]+((c&0x8000?0xFFFF0000:0) | c)]) = FPR[ft];
+	int addr;
+	addr = GPR[rs]+((c&0x8000?0xFFFF0000:0) | c);
+	if (!(0 <= addr && addr < 0x80000)) {
+		fprintf(stderr, "overflow: trying to lw from %X\n", addr);
+		exit(1);
+	}
+	*((float*)&DAT[addr]) = FPR[ft];
 	return;
 }
 
@@ -358,11 +391,11 @@ void op_lui(void) {
 }
 
 int is_mov_s(void) {
-	return (OP & FL_MASK) == 0x46000006;
+	return (OP & (FL_MASK|0x0000003F)) == 0x46000006;
 }
 
 int is_neg_s(void) {
-	return (OP & FL_MASK) == 0x46000007;
+	return (OP & (FL_MASK|0x0000003F)) == 0x46000007;
 }
 
 void op_mov_s(void) {
@@ -377,5 +410,46 @@ void op_neg_s(void) {
 	return;
 }
 
+/* added below (12/1) */
+int is_abs_s(void) {
+	return (OP & (FL_MASK|0x0000003F)) == 0x46000005;
+}
 
-op_set op_array[] = {{is_add, op_add}, {is_addi, op_addi}, {is_sub, op_sub}, {is_and, op_and}, {is_andi, op_andi}, {is_or, op_or}, {is_ori, op_ori}, {is_nor, op_nor}, {is_sll, op_sll}, {is_srl, op_srl}, {is_slt, op_slt}, {is_slti, op_slti}, {is_beq, op_beq}, {is_bne, op_bne}, {is_j, op_j}, {is_jal, op_jal}, {is_jr, op_jr}, {is_jalr, op_jalr}, {is_lw, op_lw}, {is_sw, op_sw}, {is_in, op_in}, {is_out, op_out}, {is_bt_s, op_bt_s}, {is_bf_s, op_bf_s}, {is_add_s, op_add_s}, {is_sub_s, op_sub_s}, {is_mul_s, op_mul_s}, {is_div_s, op_div_s}, /*{is_inv_s, op_inv_s}, */{is_c_s, op_c_s}, {is_lw_s, op_lw_s}, {is_sw_s, op_sw_s}, {is_lui, op_lui}, {is_mov_s, op_mov_s}, {is_neg_s, op_neg_s}, {NULL, NULL}};
+int is_sqrt_s(void) {
+	return (OP & (FL_MASK|0x0000003F)) == 0x46000004;
+}
+
+void op_abs_s(void) {
+	int ft = GET_FT(OP), fd = GET_FD(OP);
+	FPR[fd] = (FPR[ft] < 0) ? -FPR[ft] : FPR[ft];
+	return;
+}
+
+void op_sqrt_s(void) {
+	int ft = GET_FT(OP), fd = GET_FD(OP);
+	FPR[fd] = (float)sqrt((double)FPR[ft]);
+	return;
+}
+
+int is_ftoi(void) {
+	return (OP & IJ_MASK) == 0xE0000000;
+}
+
+int is_itof(void) {
+	return (OP & IJ_MASK) == 0xC0000000;
+}
+
+void op_ftoi(void) {
+	int fs = GET_RS(OP), rt = GET_RT(OP);
+	GPR[rt] = (int)FPR[fs];
+	return;
+}
+
+void op_itof(void) {
+	int rs = GET_RS(OP), ft = GET_RT(OP);
+	FPR[ft] = (float)GPR[rs];
+	return;
+}
+
+
+op_set op_array[] = {{is_add, op_add}, {is_addi, op_addi}, {is_sub, op_sub}, {is_and, op_and}, {is_andi, op_andi}, {is_or, op_or}, {is_ori, op_ori}, {is_nor, op_nor}, {is_sll, op_sll}, {is_srl, op_srl}, {is_slt, op_slt}, {is_slti, op_slti}, {is_beq, op_beq}, {is_bne, op_bne}, {is_j, op_j}, {is_jal, op_jal}, {is_jr, op_jr}, {is_jalr, op_jalr}, {is_lw, op_lw}, {is_sw, op_sw}, {is_in, op_in}, {is_out, op_out}, {is_bt_s, op_bt_s}, {is_bf_s, op_bf_s}, {is_add_s, op_add_s}, {is_sub_s, op_sub_s}, {is_mul_s, op_mul_s}, {is_div_s, op_div_s}, /*{is_inv_s, op_inv_s}, */{is_c_s, op_c_s}, {is_lw_s, op_lw_s}, {is_sw_s, op_sw_s}, {is_lui, op_lui}, {is_mov_s, op_mov_s}, {is_neg_s, op_neg_s}, {is_abs_s, op_abs_s}, {is_sqrt_s, op_sqrt_s}, {is_ftoi, op_ftoi}, {is_itof, op_itof}, {NULL, NULL}};
