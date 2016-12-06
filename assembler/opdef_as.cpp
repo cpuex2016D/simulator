@@ -98,7 +98,7 @@ using namespace std;
 #define SET_RTCRS \
 	GETRN(rt); \
 	MV2TKN(p); \
-	if (!('0' <= *p && *p <= '9')) throw "invalid arguments"; \
+	if (!(('0' <= *p && *p <= '9') || *p == '-')) throw "invalid arguments"; \
 	c = (int)strtol(p, &p, 0); \
 	if (*(p++) != '(') throw "invalid arguments"; \
 	GETRN(rs); \
@@ -118,7 +118,7 @@ using namespace std;
 #define SET_FTCRS \
 	GETFN(ft); \
 	MV2TKN(p); \
-	if (!('0' <= *p && *p <= '9')) throw "invalid arguments"; \
+	if (!(('0' <= *p && *p <= '9') || *p == '-')) throw "invalid arguments"; \
 	c = (int)strtol(p, &p, 0); \
 	if (*(p++) != '(') throw "invalid arguments"; \
 	GETRN(rs); \
