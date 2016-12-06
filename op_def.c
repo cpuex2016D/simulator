@@ -276,8 +276,10 @@ void op_sw(void) {
 
 void op_in(void) {
 	int rt = GET_RT(OP);
+	fflush(stdout);
 	fprintf(stderr, ">");
-	fread(&GPR[rt], 4, 1, stdin);
+	GPR[rt] = 0;
+	fread(&GPR[rt], 1, 1, stdin);
 	fprintf(stderr, "\n");
 	return;
 }
