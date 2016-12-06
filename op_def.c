@@ -272,7 +272,7 @@ void op_lw(void) {
 	int addr;
 	addr = GPR[rs]+((c&0x8000?0xFFFF0000:0) | c);
 	if (!(0 <= addr && addr < 0x80000)) {
-		fprintf(stderr, "overflow: trying to lw from %X\n", addr);
+		fprintf(stderr, "overflow: trying to lw from %X (PC=%u)\n", addr, PC - 1);
 		exit(1);
 	}
 	GPR[rt] = DAT[addr];
@@ -284,7 +284,7 @@ void op_sw(void) {
 	int addr;
 	addr = GPR[rs]+((c&0x8000?0xFFFF0000:0) | c);
 	if (!(0 <= addr && addr < 0x80000)) {
-		fprintf(stderr, "overflow: trying to sw to %X\n", addr);
+		fprintf(stderr, "overflow: trying to sw to %X (PC=%u)\n", addr, PC - 1);
 		exit(1);
 	}
 	DAT[addr] = GPR[rt];
@@ -389,7 +389,7 @@ void op_lw_s(void) {
 	int addr;
 	addr = GPR[rs]+((c&0x8000?0xFFFF0000:0) | c);
 	if (!(0 <= addr && addr < 0x80000)) {
-		fprintf(stderr, "overflow: trying to lw_s from %X\n", addr);
+		fprintf(stderr, "overflow: trying to lw_s from %X (PC=%u)\n", addr, PC - 1);
 		exit(1);
 	}
 	FPR[ft] = *((float*)&DAT[addr]);
@@ -401,7 +401,7 @@ void op_sw_s(void) {
 	int addr;
 	addr = GPR[rs]+((c&0x8000?0xFFFF0000:0) | c);
 	if (!(0 <= addr && addr < 0x80000)) {
-		fprintf(stderr, "overflow: trying to sw_s to %X\n", addr);
+		fprintf(stderr, "overflow: trying to sw_s to %X (PC=%u)\n", addr, PC - 1);
 		exit(1);
 	}
 	*((float*)&DAT[addr]) = FPR[ft];
