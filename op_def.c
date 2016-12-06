@@ -21,6 +21,10 @@ typedef struct {
 #define IJ_MASK 0xFC000000
 #define FL_MASK 0xFFE00000
 
+void print_jump(uint32_t PC_from, uint32_t PC_to) {
+	fprintf(stderr, "jump from %5u to %5u\n", PC_from, PC_to);
+}
+
 int is_add(void) {
 	return (OP & R_MASK) == 0x00000020;
 }
@@ -211,7 +215,9 @@ void op_slti(void) {
 void op_beq(void) {
 	int rs = GET_RS(OP), rt = GET_RT(OP), c = GET_SC(OP);
 	if (GPR[rs] == GPR[rt]) {
+		uint32_t PC_from = PC - 1;
 		PC += ((c&0x8000?0xFFFF0000:0) | c) - 1;
+		print_jump(PC_from, PC);
 	}
 	return;
 }
@@ -219,35 +225,45 @@ void op_beq(void) {
 void op_bne(void) {
 	int rs = GET_RS(OP), rt = GET_RT(OP), c = GET_SC(OP);
 	if (GPR[rs] != GPR[rt]){
+		uint32_t PC_from = PC - 1;
 		PC += ((c&0x8000?0xFFFF0000:0) | c) - 1;
+		print_jump(PC_from, PC);
 	}
 	return;
 }
 
 void op_j(void) {
 	int c = GET_LC(OP);
+	uint32_t PC_from = PC - 1;
 	PC = c;
+	print_jump(PC_from, PC);
 	return;
 }
 
 void op_jal(void) {
 	int c = GET_LC(OP);
+	uint32_t PC_from = PC - 1;
 	GPR[31] = PC; // PC is already incremented before
 	PC = c;
+	print_jump(PC_from, PC);
 	return;
 }
 
 void op_jr(void) {
 	int rs = GET_RS(OP);
+	uint32_t PC_from = PC - 1;
 	PC = GPR[rs];
+	print_jump(PC_from, PC);
 	return;
 }
 
 void op_jalr(void) {
 	int rs = GET_RS(OP), temp;
+	uint32_t PC_from = PC - 1;
 	temp = PC;
 	PC = GPR[rs];
 	GPR[31] = temp;
+	print_jump(PC_from, PC);
 	return;
 }
 
@@ -301,7 +317,9 @@ void op_out(void) {
 void op_bt_s(void) {
 	int cc = GET_BCC(OP), c = GET_SC(OP);
 	if (FPCC&(1<<cc)) {
+		uint32_t PC_from = PC - 1;
 		PC += ((c&0x8000?0xFFFF0000:0) | c) - 1;
+		print_jump(PC_from, PC);
 	}
 	return;
 }
@@ -309,7 +327,9 @@ void op_bt_s(void) {
 void op_bf_s(void) {
 	int cc = GET_BCC(OP), c = GET_SC(OP);
 	if (!(FPCC&(1<<cc))) {
+		uint32_t PC_from = PC - 1;
 		PC += ((c&0x8000?0xFFFF0000:0) | c) - 1;
+		print_jump(PC_from, PC);
 	}
 	return;
 }
