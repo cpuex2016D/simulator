@@ -42,17 +42,40 @@ void print_reg(void) {
 	return;
 }
 
+void usage_and_exit(char *argv[]) {
+	fprintf(stderr,
+	        "usage: %s [-s] text data input\n"
+	        "option:\n"
+	        "\t-s\tstep execution\n",
+	        argv[0]);
+	exit(1);
+}
+
 int main(int argc, char *argv[]) {
+	int opt;
+	enum mode_tag {
+		MODE_CONTINUE,
+		MODE_STEP,
+	} mode = MODE_CONTINUE;
 	int fsize, r, rv, fd, lastpc;
 	void *p;
 	struct stat statbuf;
 	op_set *opp;
-	if (argc < 3) {
-		fprintf(stderr, "too few arguments\n");
-		return 0;
+
+	while((opt = getopt(argc, argv, "s")) != -1) {
+		switch (opt) {
+		case 's':
+			mode = MODE_STEP;
+			break;
+		default:
+			usage_and_exit(argv);
+		}
+	}
+	if (argc - optind != 3) {
+		usage_and_exit(argv);
 	}
 	
-	fd = open(argv[1], O_RDONLY);
+	fd = open(argv[optind], O_RDONLY);
 	if (fd <= 0) {
 		perror("main");
 		return 1;
@@ -80,7 +103,7 @@ int main(int argc, char *argv[]) {
 	}
 	close(fd);
 	
-	fd = open(argv[2], O_RDONLY);
+	fd = open(argv[optind+1], O_RDONLY);
 	if (fd <= 0) {
 		perror("main");
 		return 1;
@@ -111,7 +134,7 @@ int main(int argc, char *argv[]) {
 	}
 	close(fd);
 
-	IFILE = fopen(argv[3], "r");
+	IFILE = fopen(argv[optind+2], "r");
 	if (IFILE == NULL) {
 		perror("main");
 		return 1;
@@ -122,7 +145,10 @@ int main(int argc, char *argv[]) {
 	GPR[30] = 0x40000;
 	for(PC = 0; PC <= lastpc;) {
 		OP = TEX[PC];
-		//print_reg();
+		if (mode == MODE_STEP) {
+			print_reg();
+			while(getchar() != '\n');
+		}
 		PC += 1;
 		for(opp = op_array;;opp++) {
 			if (opp->is_op == NULL) {
