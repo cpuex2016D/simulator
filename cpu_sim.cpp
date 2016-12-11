@@ -6,11 +6,16 @@
 #include<sys/stat.h>
 #include<unistd.h>
 #include <fcntl.h>
+#include <set>
+#include <readline/readline.h>
 
 #define GPR_SIZE 32
 #define FPR_SIZE 32
+#include"cpu_sim.h"
 #include"op_def.h"
+#include"command.h"
 #define MAX_(X, Y) (((X)>(Y)) ? (X) : (Y))
+using namespace std;
 
 uint32_t PC = 0;
 uint32_t GPR[GPR_SIZE] = {0};
@@ -20,6 +25,9 @@ uint32_t *TEX = NULL;
 uint32_t *DAT = NULL;
 unsigned char FPCC = 0;
 FILE *IFILE;
+exec_mode mode = MODE_CONTINUE;
+set<int> breakpoints;
+int lastpc;
 
 /*
 void print_reg(void) {
@@ -53,12 +61,8 @@ void usage_and_exit(char *argv[]) {
 
 int main(int argc, char *argv[]) {
 	int opt;
-	enum mode_tag {
-		MODE_CONTINUE,
-		MODE_STEP,
-	} mode = MODE_CONTINUE;
-	int fsize, r, rv, fd, lastpc;
-	void *p;
+	int fsize, r, rv, fd;
+	char *p;
 	struct stat statbuf;
 	op_set *opp;
 
@@ -86,7 +90,7 @@ int main(int argc, char *argv[]) {
 	}
 	fsize = statbuf.st_size;
 	lastpc = (fsize + 3)/4 - 1;
-	p = malloc(fsize+4);
+	p = (char*) malloc(fsize+4);
 	if (p == NULL) {
 		fprintf(stderr, "malloc error\n");
 		return 0;
@@ -117,7 +121,7 @@ int main(int argc, char *argv[]) {
 		fprintf(stderr, "data file size is too large\nshould be less than 1 MB\n");
 		return 1;
 	}
-	p = malloc(1024*1024*2);
+	p = (char*) malloc(1024*1024*2);
 	if (p == NULL) {
 		fprintf(stderr, "malloc error\n");
 		return 0;
@@ -143,11 +147,17 @@ int main(int argc, char *argv[]) {
 	GPR[0] = 0;
 	GPR[29] = fsize/4;
 	GPR[30] = 0x40000;
+	rl_outstream = stderr;  //readline setting
 	for(PC = 0; PC <= lastpc;) {
 		OP = TEX[PC];
-		if (mode == MODE_STEP) {
-			print_reg();
-			while(getchar() != '\n');
+		if (mode == MODE_STEP || breakpoints.count(PC)) {
+			if (breakpoints.count(PC)) {
+				fprintf(stderr, "PC=%d (breakpoint)\n", PC);
+			} else {
+				fprintf(stderr, "PC=%d\n", PC);
+			}
+			fflush(stdout);
+			command();
 		}
 		PC += 1;
 		for(opp = op_array;;opp++) {

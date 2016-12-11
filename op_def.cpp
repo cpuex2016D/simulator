@@ -2,21 +2,8 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<math.h>
-
-extern uint32_t PC;
-extern uint32_t GPR[];
-extern float FPR[];
-extern uint32_t OP;
-extern uint32_t *TEX;
-extern uint32_t *DAT;
-extern unsigned char FPCC;
-extern FILE *IFILE;
-
-typedef struct {
-	int (*is_op) (void);
-	void (*op) (void);
-} op_set;
-
+#include"cpu_sim.h"
+#include"op_def.h"
 #define R_MASK 0xFC00003F
 #define IJ_MASK 0xFC000000
 #define FL_MASK 0xFFE00000
@@ -293,7 +280,6 @@ void op_sw(void) {
 
 void op_in(void) {
 	int rt = GET_RT(OP), inp;
-	fflush(stdout);
 	/*
 	fprintf(stderr, ">");
 	fread(&GPR[rt], 1, 1, stdin);

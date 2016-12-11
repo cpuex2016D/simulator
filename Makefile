@@ -1,13 +1,18 @@
 all: sim
 
-sim: cpu_sim.o op_def.o
-	gcc cpu_sim.o op_def.o -o sim -Wall -lm
+sim: cpu_sim.o op_def.o command.o
+	g++ $^ -o $@ -Wall -lm -lreadline
+#Macでは -lreadline の代わりに -ledit でもリンクできた
 
 
-main.o: cpu_sim.c op_def.h
-	gcc -c cpu_sim.c -Wall
-op_def.o: op_def.c
-	gcc -c op_def.c -Wall
+cpu_sim.o: cpu_sim.cpp
+	g++ -c $^ -Wall
+op_def.o: op_def.cpp
+	g++ -c $^ -Wall
+command.o: command.cpp
+	g++ -c $^ -Wall
+command.cpp: command.l
+	flex -o $@ $^
 
 clean:
-	rm -f *.o sim *.gch
+	rm -f command.cpp *.o sim *.gch

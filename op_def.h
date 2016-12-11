@@ -1,4 +1,5 @@
 #ifndef OP_DIF_H
+#define OP_DIF_H
 
 typedef struct {
 	int (*is_op) (void);
