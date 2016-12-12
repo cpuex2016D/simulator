@@ -1,21 +1,23 @@
-all: sim ssim
+all: sim
 
-sim: cpu_sim.o op_def.o
-	gcc cpu_sim.o op_def.o -o sim -Wall -lm
+sim: sim.o examine_op.o exec_op.o prnt_op.o
+	gcc -Wall sim.o examine_op.o exec_op.o prnt_op.o -o sim -lm
 
-ssim: cpu_sim_by_step.o op_def.o
-	gcc cpu_sim_by_step.o op_def.o -o ssim -Wall -lm
+sim.o: sim.c
+	gcc -Wall -c sim.c
 
-step: ssim
+examine_op.o: examine_op.c prnt_op.h exec_op.h
+	gcc -Wall -c examine_op.c
 
+exec_op.o: exec_op.c
+	gcc -Wall -c exec_op.c -lm
 
-main.o: cpu_sim.c op_def.h
-	gcc -c cpu_sim.c -Wall
-op_def.o: op_def.c
-	gcc -c op_def.c -Wall
+prnt_op_op.o: prnt_op.c
+	gcc -Wall -c prnt_op.c
 
-cpu_sim_by_step.o: cpu_sim_by_step.c
-	gcc -c cpu_sim_by_step.c -Wall
 
 clean:
-	rm -f *.o sim *.gch ssim
+	rm -f *.o
+
+clear:
+	rm -f *.o sim
