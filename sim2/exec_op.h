@@ -1,0 +1,45 @@
+#ifndef _EXEC_OP_H
+#define _EXEC_OP_H
+
+void op_add(void);
+void op_addi(void);
+void op_sub(void);
+void op_and(void);
+void op_andi(void);
+void op_or(void);
+void op_ori(void);
+void op_nor(void);
+void op_sll(void);
+void op_srl(void);
+void op_slt(void);
+void op_slti(void);
+void op_beq(void);
+void op_bne(void);
+void op_j(void);
+void op_jal(void);
+void op_jr(void);
+void op_jalr(void);
+void op_lw(void);
+void op_lui(void);
+void op_sw(void);
+void op_in(void);
+void op_out(void);
+void op_bt_s(void);
+void op_bf_s(void);
+void op_add_s(void);
+void op_sub_s(void);
+void op_mul_s(void);
+void op_div_s(void);
+void op_mov_s(void);
+void op_neg_s(void);
+void op_abs_s(void);
+void op_sqrt_s(void);
+void op_c_eq_s(void);
+void op_c_lt_s(void);
+void op_c_le_s(void);
+void op_lw_s(void);
+void op_sw_s(void);
+void op_ftoi(void);
+void op_itof(void);
+
+#endif

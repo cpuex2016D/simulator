@@ -1,0 +1,45 @@
+#ifndef _PRNT_OP_H
+#define _PRNT_OP_H
+
+void prnt_add(void);
+void prnt_addi(void);
+void prnt_sub(void);
+void prnt_and(void);
+void prnt_andi(void);
+void prnt_or(void);
+void prnt_ori(void);
+void prnt_nor(void);
+void prnt_sll(void);
+void prnt_srl(void);
+void prnt_slt(void);
+void prnt_slti(void);
+void prnt_beq(void);
+void prnt_bne(void);
+void prnt_j(void);
+void prnt_jal(void);
+void prnt_jr(void);
+void prnt_jalr(void);
+void prnt_lw(void);
+void prnt_lui(void);
+void prnt_sw(void);
+void prnt_in(void);
+void prnt_out(void);
+void prnt_bt_s(void);
+void prnt_bf_s(void);
+void prnt_add_s(void);
+void prnt_sub_s(void);
+void prnt_mul_s(void);
+void prnt_div_s(void);
+void prnt_mov_s(void);
+void prnt_neg_s(void);
+void prnt_abs_s(void);
+void prnt_sqrt_s(void);
+void prnt_c_eq_s(void);
+void prnt_c_lt_s(void);
+void prnt_c_le_s(void);
+void prnt_lw_s(void);
+void prnt_sw_s(void);
+void prnt_ftoi(void);
+void prnt_itof(void);
+
+#endif
