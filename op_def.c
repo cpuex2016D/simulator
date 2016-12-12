@@ -457,7 +457,7 @@ void op_ftoi(void) {
 
 void op_itof(void) {
 	int rs = GET_RS(OP), ft = GET_RT(OP);
-	FPR[ft] = (float)GPR[rs];
+	FPR[ft] = (float) ((int32_t)GPR[rs]);
 	return;
 }
 
