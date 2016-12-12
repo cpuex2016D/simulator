@@ -8,6 +8,7 @@
 #include<fcntl.h>
 //#include<map>
 #define CPSWAP(X, Y) {char *emvc2m8 = X; X = Y; Y = emvc2m8;}
+#define WNSZ 0x100
 
 int PC;
 uint32_t GPR[32];
@@ -36,13 +37,38 @@ void print_state(void) {
 	return;
 }
 
+void print_memory(int addr, int dhf) {
+	int line;
+	if (dhf == 0) {
+		for(line = addr; line < addr + WNSZ; line += 8) {
+			fprintf(stderr, "%5X %8d %8d %8d %8d %8d %8d %8d %8d\n", line, 
+				DAT[line], DAT[line+1], DAT[line+2], DAT[line+3], 
+				DAT[line+4], DAT[line+5], DAT[line+6], DAT[line+7]);
+		}
+	}
+	if (dhf == 1) {
+		for(line = addr; line < addr + WNSZ; line += 8) {
+			fprintf(stderr, "%5X %8X %8X %8X %8X %8X %8X %8X %8X\n", line, 
+				DAT[line], DAT[line+1], DAT[line+2], DAT[line+3], 
+				DAT[line+4], DAT[line+5], DAT[line+6], DAT[line+7]);
+		}
+	}
+	if (dhf == 2) {
+		for(line = addr; line < addr + WNSZ; line += 8) {
+			fprintf(stderr, "%5X %8f %8f %8f %8f %8f %8f %8f %8f\n", line, 
+				*((float*)(DAT+line)), *((float*)(DAT+line+1)), *((float*)(DAT+line+2)), *((float*)(DAT+line+3)), 
+				*((float*)(DAT+line+4)), *((float*)(DAT+line+5)), *((float*)(DAT+line+6)), *((float*)(DAT+line+7)));
+		}
+	}
+}
+
 int main(int argc, char *argv[]) {
 	int lastpc;
 	long long repeat;
 	int continue_printing = 0;
 	//int svstep1, svstep2, stpstep1, stpstep2;
 	char buf1[100] = "s\n", buf2[100] = "s\n", *p1, *p2;
-
+	int addr = 0, dhf = 0;
 
 	if (simprepare(argc, argv, &lastpc)) {
 		return 1;
@@ -85,6 +111,36 @@ int main(int argc, char *argv[]) {
 				} else if (p1[0] == 'P') {
 					continue_printing = !continue_printing;
 					fprintf(stderr, "continue_printing: %s\n", continue_printing ? "ON" : "OFF");
+				} else if (p1[0] == 'm') {
+					if (p1[1] == ' ') {
+						addr = (int)strtol(p1+2, NULL, 0);
+						addr = (addr/WNSZ)*WNSZ;
+						if (0 <= addr && addr < 0x80000) {
+							print_memory(addr, dhf);
+						} else {
+							fprintf(stderr, "invalid address\n");
+						}
+					} else if (p1[1] == '\n') {
+						print_memory(addr, dhf);
+					} else if (p1[1] == 'd') {
+						dhf = 0;
+					} else if (p1[1] == 'h') {
+						dhf = 1;
+					} else if (p1[1] == 'f') {
+						dhf = 2;
+					} else {
+						fprintf(stderr, "invalid\n");
+					}
+				} else if (p1[0] == 'd') {
+					if (addr + WNSZ < 0x80000) {
+						addr += WNSZ;
+						print_memory(addr, dhf);
+					} else fprintf(stderr, "cannot go down any more\n");
+				} else if (p1[0] == 'u') {
+					if (addr - WNSZ >= 0) {
+						addr -= WNSZ;
+						print_memory(addr, dhf);
+					} else fprintf(stderr, "cannot go up any more\n");
 				} else if (p1[0] == 'c') {
 					repeat = 0x7FFFFFFFFFFFFFFF;
 					break;

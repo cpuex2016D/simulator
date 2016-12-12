@@ -136,15 +136,15 @@ void prnt_sqrt_s(void) {
 	return;
 }
 void prnt_c_eq_s(void) {
-	fprintf(stderr, "%d\tc.eq.s\t%d, %%r%d, %%r%d\n", PC, CC, FS, FT);
+	fprintf(stderr, "%d\tc.eq.s\t%d, %%f%d, %%f%d\n", PC, CC, FS, FT);
 	return;
 }
 void prnt_c_lt_s(void) {
-	fprintf(stderr, "%d\tc.lt.s\t%d, %%r%d, %%r%d\n", PC, CC, FS, FT);
+	fprintf(stderr, "%d\tc.lt.s\t%d, %%f%d, %%f%d\n", PC, CC, FS, FT);
 	return;
 }
 void prnt_c_le_s(void) {
-	fprintf(stderr, "%d\tc.le.s\t%d, %%r%d, %%r%d\n", PC, CC, FS, FT);
+	fprintf(stderr, "%d\tc.le.s\t%d, %%f%d, %%f%d\n", PC, CC, FS, FT);
 	return;
 }
 void prnt_lw_s(void) {

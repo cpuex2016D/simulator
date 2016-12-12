@@ -77,21 +77,21 @@ void examine_op(void) {
 				OP_PRNT = prnt_sll;
 				return;
 			} else if ((OP&0x3F) == 2) {
-				RS = GET_RS(OP);
-				OP_EX = op_jr;
-				OP_PRNT = prnt_jr;
-				return;
-			} else if ((OP&0x3F) == 8) {
-				RS = GET_RS(OP);
-				OP_EX = op_jalr;
-				OP_PRNT = prnt_jalr;
-				return;
-			} else if ((OP&0x3F) == 9) {
 				RD = GET_RD(OP);
 				RT = GET_RT(OP);
 				C = GET_SSC(OP);
 				OP_EX = op_srl;
 				OP_PRNT = prnt_srl;
+				return;
+			} else if ((OP&0x3F) == 8) {
+				RS = GET_RS(OP);
+				OP_EX = op_jr;
+				OP_PRNT = prnt_jr;
+				return;
+			} else if ((OP&0x3F) == 9) {
+				RS = GET_RS(OP);
+				OP_EX = op_jalr;
+				OP_PRNT = prnt_jalr;
 				return;
 			}
 			break;
