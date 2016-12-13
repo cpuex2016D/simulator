@@ -6,9 +6,10 @@
 #include<sys/stat.h>
 #include<unistd.h>
 #include<fcntl.h>
-//#include<map>
+#include<set>
 #define CPSWAP(X, Y) {char *emvc2m8 = X; X = Y; Y = emvc2m8;}
 #define WNSZ 0x100
+using namespace std;
 
 int PC;
 uint32_t GPR[32];
@@ -23,6 +24,7 @@ void (*OP_PRNT) (void);
 int STOP;
 
 int PJ = 0;
+set<int> BREAKPOINTS;
 unsigned long long OPCOUNT;
 
 
@@ -68,7 +70,7 @@ int main(int argc, char *argv[]) {
 	int continue_printing = 0;
 	//int svstep1, svstep2, stpstep1, stpstep2;
 	char buf1[100] = "s\n", buf2[100] = "s\n", *p1, *p2;
-	int addr = 0, dhf = 0;
+	int addr = 0, dhf = 0; // vars for memory print
 
 	if (simprepare(argc, argv, &lastpc)) {
 		return 1;
@@ -78,12 +80,12 @@ int main(int argc, char *argv[]) {
 	repeat = 0;
 	OPCOUNT = 0;
 	for(PC = 0; PC <= lastpc;) {
-	execution_top:
+	//execution_top:
 		OP = TEX[PC];
 		
 		examine_op();
 		
-		if (repeat <= 0 || STOP == 1) {
+		if (repeat <= 0 || STOP == 1 || BREAKPOINTS.find(PC) != BREAKPOINTS.end()) {
 		print_again:
 			fprintf(stderr, "\n%lld\t", OPCOUNT);
 			print_state();
@@ -144,6 +146,26 @@ int main(int argc, char *argv[]) {
 				} else if (p1[0] == 'c') {
 					repeat = 0x7FFFFFFFFFFFFFFF;
 					break;
+				} else if (p1[0] == 'b') {
+					puts("aaa");
+					if (p1[1] == '\n') {
+							//print_breakpoints();
+						for(set<int>::iterator si = BREAKPOINTS.begin();
+											si != BREAKPOINTS.end(); si++) {
+							fprintf(stderr, "%d\n", *si);
+						}
+					} else if (p1[1] == ' ') {
+						int i = (int)strtol(p1+2, NULL, 0);
+						if (0 <= i && i <= lastpc) {
+							BREAKPOINTS.insert(i);
+						} else {
+							fprintf(stderr, "out of valid range");
+						}
+					} else if (p1[1] == 'c') {
+						BREAKPOINTS.clear();
+					} else {
+						fprintf(stderr, "invalid\n");
+					}
 				} else {
 					fprintf(stderr, "invalid\n");
 				}
@@ -186,7 +208,7 @@ endexec:
 
 int simprepare(int argc, char *argv[], int *lastpc) {
 	int fsize, r, rv, fd;
-	void *p;
+	char *p;
 	struct stat statbuf;
 	if (argc < 3) {
 		fprintf(stderr, "too few arguments\n");
@@ -208,7 +230,7 @@ int simprepare(int argc, char *argv[], int *lastpc) {
 		return 1;
 	}
 	*lastpc = fsize/4;
-	p = malloc(fsize+4);
+	p = (char *)malloc(fsize+4);
 	if (p == NULL) {
 		fprintf(stderr, "malloc error\n");
 		return 1;
@@ -239,7 +261,7 @@ int simprepare(int argc, char *argv[], int *lastpc) {
 		fprintf(stderr, "data file size is too large\nshould be less than 1 MB\n");
 		return 1;
 	}
-	p = malloc(1024*1024*2);
+	p = (char *)malloc(1024*1024*2);
 	if (p == NULL) {
 		fprintf(stderr, "malloc error\n");
 		return 1;
