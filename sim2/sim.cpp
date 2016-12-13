@@ -86,6 +86,7 @@ int main(int argc, char *argv[]) {
 		examine_op();
 		
 		if (repeat <= 0 || STOP == 1 || BREAKPOINTS.find(PC) != BREAKPOINTS.end()) {
+			fflush(stdout);
 		print_again:
 			fprintf(stderr, "\n%lld\t", OPCOUNT);
 			print_state();
@@ -147,7 +148,6 @@ int main(int argc, char *argv[]) {
 					repeat = 0x7FFFFFFFFFFFFFFF;
 					break;
 				} else if (p1[0] == 'b') {
-					puts("aaa");
 					if (p1[1] == '\n') {
 							//print_breakpoints();
 						for(set<int>::iterator si = BREAKPOINTS.begin();
