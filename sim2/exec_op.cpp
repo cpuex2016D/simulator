@@ -275,7 +275,7 @@ void op_sw_s(void) {
 }
 
 void op_ftoi(void) {
-	GPR[RT] = (int)FPR[FS];
+	GPR[RT] = lrintf(FPR[FS]);
 	return;
 }
 
