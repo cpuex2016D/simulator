@@ -1,7 +1,7 @@
 #include<stdio.h>
 #include<stdint.h>
-extern uint32_t PC;
-extern int32_t RD, RS, RT, C, FD, FS, FT, CC;
+#include"sim.h"
+#include"examine_op.h"
 
 void prnt_add(void) {
 	fprintf(stderr, "%d\tadd\t%%r%d, %%r%d, %%r%d\n", PC, RD, RS, RT);

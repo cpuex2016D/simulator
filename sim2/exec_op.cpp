@@ -1,25 +1,11 @@
 #include<stdio.h>
 #include<stdint.h>
 #include<math.h>
-
-extern int PC;
-extern uint32_t GPR[32];
-extern char FPCC[9];
-extern float FPR[32];
-extern uint32_t OP;
-extern uint32_t *TEX, *DAT;
-extern FILE *IFILE;
-
-extern void (*OP_EX) (void);
-extern void (*OP_PRNT) (void);
-extern int STOP;
-extern int32_t RD, RS, RT, C, FD, FS, FT, CC;
-
-extern int PJ;
-extern unsigned long long OPCOUNT;
+#include"sim.h"
+#include"examine_op.h"
 
 void print_jump(uint32_t PC_from, uint32_t PC_to) {
-	fprintf(stderr, "%8llu jump from %5u to %5u\n", OPCOUNT, PC_from, PC_to);
+	fprintf(stderr, "%8llu jump from %5u to %5u\n", COUNTS, PC_from, PC_to);
 }
 
 void op_add(void) {

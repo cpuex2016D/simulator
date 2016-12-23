@@ -4,6 +4,7 @@
 #include<math.h>
 #include"prnt_op.h"
 #include"exec_op.h"
+#include"sim.h"
 
 #define GET_RS(x) ((0x03E00000 & (x)) >> 21)
 #define GET_RT(x) ((0x001F0000 & (x)) >> 16)
@@ -18,17 +19,7 @@
 #define GET_CCC(x) ((0x00000700 & (x)) >> 8)
 #define GET_COND(x) (0x0000000F & (x))
 
-extern int PC;
-extern uint32_t GPR[32];
-extern char FPCC[9];
-extern float FPR[32];
-extern uint32_t OP;
-extern uint32_t *TEX, *DAT;
-extern FILE *IFILE;
 
-extern void (*OP_EX) (void);
-extern void (*OP_PRNT) (void);
-extern int STOP;
 int32_t RD, RS, RT, C, FD, FS, FT, CC;
 
 
@@ -43,26 +34,32 @@ void examine_op(void) {
 				RT = GET_RT(OP);
 				switch(OP&0x3F) {
 				case 0x20:
+					OP_TYPE = ADD_L;
 					OP_EX = op_add;
 					OP_PRNT = prnt_add;
 					return;
 				case 0x22:
+					OP_TYPE = SUB_L;
 					OP_EX = op_sub;
 					OP_PRNT = prnt_sub;
 					return;
 				case 0x24:
+					OP_TYPE = AND_L;
 					OP_EX = op_and;
 					OP_PRNT = prnt_and;
 					return;
 				case 0x25:
+					OP_TYPE = OR_L;
 					OP_EX = op_or;
 					OP_PRNT = prnt_or;
 					return;
 				case 0x27:
+					OP_TYPE = NOR_L;
 					OP_EX = op_nor;
 					OP_PRNT = prnt_nor;
 					return;
 				case 0x2A:
+					OP_TYPE = SLT_L;
 					OP_EX = op_slt;
 					OP_PRNT = prnt_slt;
 					return;
@@ -73,6 +70,7 @@ void examine_op(void) {
 				RD = GET_RD(OP);
 				RT = GET_RT(OP);
 				C = GET_SSC(OP);
+				OP_TYPE = SLL_L;
 				OP_EX = op_sll;
 				OP_PRNT = prnt_sll;
 				return;
@@ -80,16 +78,19 @@ void examine_op(void) {
 				RD = GET_RD(OP);
 				RT = GET_RT(OP);
 				C = GET_SSC(OP);
+				OP_TYPE = SRL_L;
 				OP_EX = op_srl;
 				OP_PRNT = prnt_srl;
 				return;
 			} else if ((OP&0x3F) == 8) {
 				RS = GET_RS(OP);
+				OP_TYPE = JR_L;
 				OP_EX = op_jr;
 				OP_PRNT = prnt_jr;
 				return;
 			} else if ((OP&0x3F) == 9) {
 				RS = GET_RS(OP);
+				OP_TYPE = JALR_L;
 				OP_EX = op_jalr;
 				OP_PRNT = prnt_jalr;
 				return;
@@ -97,11 +98,13 @@ void examine_op(void) {
 			break;
 		case 2:
 			C = GET_LC(OP);
+			OP_TYPE = J_L;
 			OP_EX = op_j;
 			OP_PRNT = prnt_j;
 			return;
 		case 3:
 			C = GET_LC(OP);
+			OP_TYPE = JAL_L;
 			OP_EX = op_jal;
 			OP_PRNT = prnt_jal;
 			return;
@@ -109,6 +112,7 @@ void examine_op(void) {
 			RS = GET_RS(OP);
 			RT = GET_RT(OP);
 			C = (int16_t)OP;
+			OP_TYPE = BEQ_L;
 			OP_EX = op_beq;
 			OP_PRNT = prnt_beq;
 			return;
@@ -116,6 +120,7 @@ void examine_op(void) {
 			RS = GET_RS(OP);
 			RT = GET_RT(OP);
 			C = (int16_t)OP;
+			OP_TYPE = BNE_L;
 			OP_EX = op_bne;
 			OP_PRNT = prnt_bne;
 			return;
@@ -129,6 +134,7 @@ void examine_op(void) {
 			RT = GET_RT(OP);
 			RS = GET_RS(OP);
 			C = (int16_t)OP;
+			OP_TYPE = ADDI_L;
 			OP_EX = op_addi;
 			OP_PRNT = prnt_addi;
 			return;
@@ -136,6 +142,7 @@ void examine_op(void) {
 			RT = GET_RT(OP);
 			RS = GET_RS(OP);
 			C = (int16_t)OP;
+			OP_TYPE = SLTI_L;
 			OP_EX = op_slti;
 			OP_PRNT = prnt_slti;
 			return;
@@ -143,6 +150,7 @@ void examine_op(void) {
 			RT = GET_RT(OP);
 			RS = GET_RS(OP);
 			C = (uint16_t)OP;
+			OP_TYPE = ANDI_L;
 			OP_EX = op_andi;
 			OP_PRNT = prnt_andi;
 			return;
@@ -150,12 +158,14 @@ void examine_op(void) {
 			RT = GET_RT(OP);
 			RS = GET_RS(OP);
 			C = (uint16_t)OP;
+			OP_TYPE = ORI_L;
 			OP_EX = op_ori;
 			OP_PRNT = prnt_ori;
 			return;
 		case 7:
 			RT = GET_RT(OP);
 			C = (uint16_t)OP;
+			OP_TYPE = LUI_L;
 			OP_EX = op_lui;
 			OP_PRNT = prnt_lui;
 			return;
@@ -171,21 +181,25 @@ void examine_op(void) {
 				switch(OP&0x3F) {
 				case 6:
 					FD = GET_FD(OP);
+					OP_TYPE = MOV_S_L;
 					OP_EX = op_mov_s;
 					OP_PRNT = prnt_mov_s;
 					return;
 				case 7:
 					FD = GET_FD(OP);
+					OP_TYPE = NEG_S_L;
 					OP_EX = op_neg_s;
 					OP_PRNT = prnt_neg_s;
 					return;
 				case 5:
 					FD = GET_FD(OP);
+					OP_TYPE = ABS_S_L;
 					OP_EX = op_abs_s;
 					OP_PRNT = prnt_abs_s;
 					return;
 				case 4:
 					FD = GET_FD(OP);
+					OP_TYPE = SQRT_S_L;
 					OP_EX = op_sqrt_s;
 					OP_PRNT = prnt_sqrt_s;
 					return;
@@ -193,6 +207,7 @@ void examine_op(void) {
 					FD = GET_FD(OP);
 					FS = GET_FS(OP);
 					CC = GET_CCC(OP);
+					OP_TYPE = C_LT_S_L;
 					OP_EX = op_c_lt_s;
 					OP_PRNT = prnt_c_lt_s;
 					return;
@@ -200,6 +215,7 @@ void examine_op(void) {
 					FD = GET_FD(OP);
 					FS = GET_FS(OP);
 					CC = GET_CCC(OP);
+					OP_TYPE = C_LE_S_L;
 					OP_EX = op_c_le_s;
 					OP_PRNT = prnt_c_le_s;
 					return;
@@ -211,26 +227,31 @@ void examine_op(void) {
 				switch(OP&0x3F) {
 				case 0:
 					FD = GET_FD(OP);
+					OP_TYPE = ADD_S_L;
 					OP_EX = op_add_s;
 					OP_PRNT = prnt_add_s;
 					return;
 				case 1:
 					FD = GET_FD(OP);
+					OP_TYPE = SUB_S_L;
 					OP_EX = op_sub_s;
 					OP_PRNT = prnt_sub_s;
 					return;
 				case 2:
 					FD = GET_FD(OP);
+					OP_TYPE = MUL_S_L;
 					OP_EX = op_mul_s;
 					OP_PRNT = prnt_mul_s;
 					return;
 				case 3:
 					FD = GET_FD(OP);
+					OP_TYPE = DIV_S_L;
 					OP_EX = op_div_s;
 					OP_PRNT = prnt_div_s;
 					return;
 				case 0x32:
 					CC = GET_CCC(OP);
+					OP_TYPE = C_EQ_S_L;
 					OP_EX = op_c_eq_s;
 					OP_PRNT = prnt_c_eq_s;
 					return;
@@ -241,12 +262,14 @@ void examine_op(void) {
 		} else if ((OP&0xFFE30000) == 0x45010000) {
 			CC = GET_BCC(OP);
 			C = (int16_t)OP;
+			OP_TYPE = BT_S_L;
 			OP_EX = op_bt_s;
 			OP_PRNT = prnt_bt_s;
 			return;
 		} else if ((OP&0xFFE30000) == 0x45000000) {
 			CC = GET_BCC(OP);
 			C = (int16_t)OP;
+			OP_TYPE = BF_S_L;
 			OP_EX = op_bf_s;
 			OP_PRNT = prnt_bf_s;
 			return;
@@ -255,11 +278,13 @@ void examine_op(void) {
 	case 3:
 		if ((OP&0xFC000000) == 0x68000000) {
 			RT = GET_RT(OP);
+			OP_TYPE = IN_L;
 			OP_EX = op_in;
 			OP_PRNT = prnt_in;
 			return;
 		} else if ((OP&0xFC000000) == 0x6C000000) {
 			RT = GET_RT(OP);
+			OP_TYPE = OUT_L;
 			OP_EX = op_out;
 			OP_PRNT = prnt_out;
 			return;
@@ -270,6 +295,7 @@ void examine_op(void) {
 			RT = GET_RT(OP);
 			RS = GET_RS(OP);
 			C = (int16_t)OP;
+			OP_TYPE = LW_L;
 			OP_EX = op_lw;
 			OP_PRNT = prnt_lw;
 			return;
@@ -280,6 +306,7 @@ void examine_op(void) {
 			RT = GET_RT(OP);
 			RS = GET_RS(OP);
 			C = (int16_t)OP;
+			OP_TYPE = SW_L;
 			OP_EX = op_sw;
 			OP_PRNT = prnt_sw;
 			return;
@@ -289,6 +316,7 @@ void examine_op(void) {
 		if ((OP&0xFC000000) == 0xC0000000) {
 			RS = GET_RS(OP);
 			FT = GET_RT(OP);
+			OP_TYPE = ITOF_L;
 			OP_EX = op_itof;
 			OP_PRNT = prnt_itof;
 			return;
@@ -296,6 +324,7 @@ void examine_op(void) {
 			RS = GET_RS(OP);
 			FT = GET_FT(OP);
 			C = (int16_t)OP;
+			OP_TYPE = LW_S_L;
 			OP_EX = op_lw_s;
 			OP_PRNT = prnt_lw_s;
 			return;
@@ -305,6 +334,7 @@ void examine_op(void) {
 		if ((OP&0xFC000000) == 0xE0000000) {
 			FS = GET_RS(OP);
 			RT = GET_RT(OP);
+			OP_TYPE = FTOI_L;
 			OP_EX = op_ftoi;
 			OP_PRNT = prnt_ftoi;
 			return;
@@ -312,6 +342,7 @@ void examine_op(void) {
 			RS = GET_RS(OP);
 			FT = GET_FT(OP);
 			C = (int16_t)OP;
+			OP_TYPE = SW_S_L;
 			OP_EX = op_sw_s;
 			OP_PRNT = prnt_sw_s;
 			return;
