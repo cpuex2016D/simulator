@@ -20,4 +20,12 @@ extern unsigned long long OP_COUNT[];
 extern int OP_TYPE;
 extern unsigned long long COUNTS;
 
+#define N_MSBs 10
+#define N_LSBs 4
+#define MASK_MSBs 0x00003ff0
+#define MASK_LSBs 0x0000000f
+extern uint32_t GH;
+extern char PHT[1<<(N_MSBs+N_LSBs)];
+extern unsigned long long BP_COUNT[2];
+
 #endif

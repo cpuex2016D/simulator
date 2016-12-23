@@ -7,6 +7,7 @@
 #include<unistd.h>
 #include<fcntl.h>
 #include<set>
+#include"sim.h"
 #include"examine_op.h"
 #define CPSWAP(X, Y) {char *emvc2m8 = X; X = Y; Y = emvc2m8;}
 #define WNSZ 0x100
@@ -25,13 +26,15 @@ void (*OP_PRNT) (void);
 int STOP;
 
 int PJ = 0;
-enum {ADD_L, ADDI_L, SUB_L, AND_L, ANDI_L, OR_L, ORI_L, NOR_L, SLL_L, SRL_L, SLT_L, SLTI_L, BEQ_L, BNE_L, J_L, JAL_L, JR_L, JALR_L, LW_L, LUI_L, SW_L, IN_L, OUT_L, BT_S_L, BF_S_L, ADD_S_L, SUB_S_L, MUL_S_L, DIV_S_L, MOV_S_L, NEG_S_L, ABS_S_L, SQRT_S_L, C_EQ_S_L, C_LT_S_L, C_LE_S_L, LW_S_L, SW_S_L, FTOI_L, ITOF_L, OP_TOTAL};
 unsigned long long OP_COUNT[OP_TOTAL] = {0};
 int OP_TYPE;
 unsigned long long COUNTS;
 
 set<int> BREAKPOINTS;
 
+uint32_t GH;
+char PHT[1<<(N_MSBs+N_LSBs)];
+unsigned long long BP_COUNT[2];
 
 
 int simprepare(int, char*[], int*);
@@ -43,7 +46,7 @@ void print_state(void) {
 }
 
 void print_stats(void) {
-	fprintf(stderr, "\nadd:\t%llu\naddi:\t%llu\nsub:\t%llu\nand:\t%llu\nandi:\t%llu\nor:\t%llu\nori:\t%llu\nnor:\t%llu\nsll:\t%llu\nsrl:\t%llu\nslt:\t%llu\nslti:\t%llu\nbeq:\t%llu\nbne:\t%llu\nj:\t%llu\njal:\t%llu\njr:\t%llu\njalr:\t%llu\nlw:\t%llu\nlui:\t%llu\nsw:\t%llu\nin:\t%llu\nout:\t%llu\nbt.s:\t%llu\nbf.s:\t%llu\nadd.s:\t%llu\nsub.s:\t%llu\nmul.s:\t%llu\ndiv.s:\t%llu\nmov.s:\t%llu\nneg.s:\t%llu\nabs.s:\t%llu\nsqrt.s:\t%llu\nc.eq.s:\t%llu\nc.lt.s:\t%llu\nc.le.s:\t%llu\nlw.s:\t%llu\nsw.s:\t%llu\nftoi:\t%llu\nitof:\t%llu\n", OP_COUNT[ADD_L], OP_COUNT[ADDI_L], OP_COUNT[SUB_L], OP_COUNT[AND_L], OP_COUNT[ANDI_L], OP_COUNT[OR_L], OP_COUNT[ORI_L], OP_COUNT[NOR_L], OP_COUNT[SLL_L], OP_COUNT[SRL_L], OP_COUNT[SLT_L], OP_COUNT[SLTI_L], OP_COUNT[BEQ_L], OP_COUNT[BNE_L], OP_COUNT[J_L], OP_COUNT[JAL_L], OP_COUNT[JR_L], OP_COUNT[JALR_L], OP_COUNT[LW_L], OP_COUNT[LUI_L], OP_COUNT[SW_L], OP_COUNT[IN_L], OP_COUNT[OUT_L], OP_COUNT[BT_S_L], OP_COUNT[BF_S_L], OP_COUNT[ADD_S_L], OP_COUNT[SUB_S_L], OP_COUNT[MUL_S_L], OP_COUNT[DIV_S_L], OP_COUNT[MOV_S_L], OP_COUNT[NEG_S_L], OP_COUNT[ABS_S_L], OP_COUNT[SQRT_S_L], OP_COUNT[C_EQ_S_L], OP_COUNT[C_LT_S_L], OP_COUNT[C_LE_S_L], OP_COUNT[LW_S_L], OP_COUNT[SW_S_L], OP_COUNT[FTOI_L], OP_COUNT[ITOF_L]);
+	fprintf(stderr, "\nadd:\t%llu\naddi:\t%llu\nsub:\t%llu\nand:\t%llu\nandi:\t%llu\nor:\t%llu\nori:\t%llu\nnor:\t%llu\nsll:\t%llu\nsrl:\t%llu\nslt:\t%llu\nslti:\t%llu\nbeq:\t%llu\nbne:\t%llu\nj:\t%llu\njal:\t%llu\njr:\t%llu\njalr:\t%llu\nlw:\t%llu\nlui:\t%llu\nsw:\t%llu\nin:\t%llu\nout:\t%llu\nbt.s:\t%llu\nbf.s:\t%llu\nadd.s:\t%llu\nsub.s:\t%llu\nmul.s:\t%llu\ndiv.s:\t%llu\nmov.s:\t%llu\nneg.s:\t%llu\nabs.s:\t%llu\nsqrt.s:\t%llu\nc.eq.s:\t%llu\nc.lt.s:\t%llu\nc.le.s:\t%llu\nlw.s:\t%llu\nsw.s:\t%llu\nftoi:\t%llu\nitof:\t%llu\nprediction success:\t%llu\nprediction failure:\t%llu\n", OP_COUNT[ADD_L], OP_COUNT[ADDI_L], OP_COUNT[SUB_L], OP_COUNT[AND_L], OP_COUNT[ANDI_L], OP_COUNT[OR_L], OP_COUNT[ORI_L], OP_COUNT[NOR_L], OP_COUNT[SLL_L], OP_COUNT[SRL_L], OP_COUNT[SLT_L], OP_COUNT[SLTI_L], OP_COUNT[BEQ_L], OP_COUNT[BNE_L], OP_COUNT[J_L], OP_COUNT[JAL_L], OP_COUNT[JR_L], OP_COUNT[JALR_L], OP_COUNT[LW_L], OP_COUNT[LUI_L], OP_COUNT[SW_L], OP_COUNT[IN_L], OP_COUNT[OUT_L], OP_COUNT[BT_S_L], OP_COUNT[BF_S_L], OP_COUNT[ADD_S_L], OP_COUNT[SUB_S_L], OP_COUNT[MUL_S_L], OP_COUNT[DIV_S_L], OP_COUNT[MOV_S_L], OP_COUNT[NEG_S_L], OP_COUNT[ABS_S_L], OP_COUNT[SQRT_S_L], OP_COUNT[C_EQ_S_L], OP_COUNT[C_LT_S_L], OP_COUNT[C_LE_S_L], OP_COUNT[LW_S_L], OP_COUNT[SW_S_L], OP_COUNT[FTOI_L], OP_COUNT[ITOF_L], BP_COUNT[1], BP_COUNT[0]);
 	return;
 }
 

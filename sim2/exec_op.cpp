@@ -7,6 +7,14 @@
 void print_jump(uint32_t PC_from, uint32_t PC_to) {
 	fprintf(stderr, "%8llu jump from %5u to %5u\n", COUNTS, PC_from, PC_to);
 }
+void branch_prediction(uint32_t PC, int taken) {
+	uint32_t index = GH ^ PC;
+	int prediction = PHT[index] >= 2;
+	BP_COUNT[prediction == taken]++;
+	if ( taken && PHT[index]!=3) PHT[index]++;
+	if (!taken && PHT[index]!=0) PHT[index]--;
+	GH = ((GH << 1) & MASK_MSBs) | (taken << N_LSBs);
+}
 
 void op_add(void) {
 	GPR[RD] = GPR[RS] + GPR[RT];
@@ -69,8 +77,10 @@ void op_slti(void) {
 }
 
 void op_beq(void) {
-	if (GPR[RS] == GPR[RT]) {
-		uint32_t PC_from = PC - 1;
+	uint32_t PC_from = PC - 1;
+	int taken = GPR[RS] == GPR[RT];
+	branch_prediction(PC_from, taken);
+	if (taken) {
 		PC += C - 1;
 		if (PJ) print_jump(PC_from, PC);
 	}
@@ -78,8 +88,10 @@ void op_beq(void) {
 }
 
 void op_bne(void) {
-	if (GPR[RS] != GPR[RT]) {
-		uint32_t PC_from = PC - 1;
+	uint32_t PC_from = PC - 1;
+	int taken = GPR[RS] != GPR[RT];
+	branch_prediction(PC_from, taken);
+	if (taken) {
 		PC += C - 1;
 		if (PJ) print_jump(PC_from, PC);
 	}
@@ -164,8 +176,10 @@ void op_out(void) {
 }
 
 void op_bt_s(void) {
-	if (FPCC[CC] == '1') {
-		uint32_t PC_from = PC - 1;
+	uint32_t PC_from = PC - 1;
+	int taken = FPCC[CC] == '1';
+	branch_prediction(PC_from, taken);
+	if (taken) {
 		PC += C - 1;
 		if (PJ) print_jump(PC_from, PC);
 	}
@@ -173,8 +187,10 @@ void op_bt_s(void) {
 }
 
 void op_bf_s(void) {
-	if (FPCC[CC] == '0') {
-		uint32_t PC_from = PC - 1;
+	uint32_t PC_from = PC - 1;
+	int taken = FPCC[CC] == '0';
+	branch_prediction(PC_from, taken);
+	if (taken) {
 		PC += C - 1;
 		if (PJ) print_jump(PC_from, PC);
 	}

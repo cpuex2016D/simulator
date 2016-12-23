@@ -3,7 +3,7 @@ all: sim
 sim: sim.o examine_op.o exec_op.o prnt_op.o
 	g++ -Wall sim.o examine_op.o exec_op.o prnt_op.o -o sim -lm
 
-sim.o: sim.cpp
+sim.o: sim.cpp sim.h
 	g++ -Wall -c sim.cpp
 
 examine_op.o: examine_op.cpp prnt_op.h exec_op.h sim.h
