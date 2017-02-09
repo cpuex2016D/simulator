@@ -181,6 +181,7 @@ void op_in(coreenv& ce, arg& ag) {
 	int inp;
 	inp = getc(IFILE);
 	if (inp == EOF) {
+		fprintf(stderr, "input file reached the last");
 		ag.STOP = 1;
 		return;
 	}
@@ -337,8 +338,8 @@ void op_acc(coreenv& ce, arg& ag) {
 	
 void op_fork(coreenv& ce, arg& ag) {
 	//fork rt, rd
-	AC = ag.RT;
-	AD = ag.RD;
+	AC = CE[0].GPR[ag.RT];
+	AD = CE[0].GPR[ag.RD];
 	int spc = CE[0].PC;
 	for(int i = 0; i < 32; i++) {
 		for(int j = 1; j < CORE_NUM; j++) {
@@ -353,7 +354,7 @@ void op_fork(coreenv& ce, arg& ag) {
 		ta[i].repeat = ag.REPEAT;
 		int rv = pthread_create(&tid[i], NULL, invoke_child_core, (void*)&ta[i]);
 		if (rv != 0) {
-			perror("fork");
+			perror("fork pthread_create");
 			ag.STOP = 1;
 			return;
 		}
@@ -362,7 +363,11 @@ void op_fork(coreenv& ce, arg& ag) {
 		void *vrp;
 		int rv = pthread_join(tid[i], &vrp);
 		if (rv != 0 || vrp != NULL) {
-			perror("fork");
+			if (rv != 0) {
+				perror("fork");
+			} else {
+				fprintf(stderr, "forked core stopped unexpectedly");
+			}
 			ag.STOP = 1;
 			return;
 		}
