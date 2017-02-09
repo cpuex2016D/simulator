@@ -4,10 +4,12 @@
 #include"types.h"
 
 #include<stdlib.h>
+#include<pthread.h>
 
 #define CPSWAP(X, Y) {char *emvc2m8 = X; X = Y; Y = emvc2m8;}
 #define WNSZ 0x100
 
+static pthread_mutex_t mtx = PTHREAD_MUTEX_INITIALIZER;
 
 using namespace std;
 
@@ -21,6 +23,7 @@ void* invoke_child_core(void *vparg) {
 	char *p1 = s2, *p2 = s1;
 	int addr = 0, dhf = 0;
 	for(CE[coreindex].PC = 0; CE[coreindex].PC <= CTEX_LAST;) {
+		pthread_mutex_lock(&mtx);
 		uint32_t op = CTEX[CE[coreindex].PC];
 		examine_op_child(op, ag);
 		if (ag.REPEAT <= 0 || ag.STOP == 1 || bp.find(CE[coreindex].PC) != bp.end()) {
@@ -120,6 +123,7 @@ void* invoke_child_core(void *vparg) {
 			fprintf(stderr, "\n%lld\t", counts);
 			print_state();
 		}*/
+		pthread_mutex_unlock(&mtx);
 		if (ag.STOP == 1) break;
 		
 		/* execution */

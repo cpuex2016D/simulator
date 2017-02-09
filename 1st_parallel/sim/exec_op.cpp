@@ -331,7 +331,7 @@ void op_next(coreenv& ce, arg& ag) {
 void op_acc(coreenv& ce, arg& ag) {
 	//acc rs, ft
 	pthread_mutex_lock(&mtx2);
-	CE[0].FPR[29+ag.RS] = ce.FPR[ag.FT];
+	CE[0].FPR[ag.RS] += ce.FPR[ag.FT];
 	pthread_mutex_unlock(&mtx2);
 	return;
 }
