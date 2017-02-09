@@ -4,8 +4,8 @@
 #include"sim.h"
 #include"examine_op.h"
 
-void print_jump(uint32_t PC_from, uint32_t PC_to) {
-	fprintf(stderr, "%8llu jump from %5u to %5u\n", COUNTS, PC_from, PC_to);
+void print_jump(uint32_t PC_from, uint32_t PC_to, char *description = "") {
+	fprintf(stderr, "%8llu jump from %5u to %5u%s\n", COUNTS, PC_from, PC_to, description);
 }
 
 void op_add(void) {
@@ -275,12 +275,14 @@ void op_fork(void) {
 	PARALLEL_END_PC = PC;
 	GC = GPR[RT];
 	GD = GPR[RD];
+	if (PJ) print_jump(PC-1, 0, " (fork)");
 	PC = 0;
 	return;
 }
 
 void op_end(void) {
 	PARALLEL = 0;
+	if (PJ) print_jump(PC-1, PARALLEL_END_PC, " (end)");
 	PC = PARALLEL_END_PC;
 	return;
 }
