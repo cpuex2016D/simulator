@@ -270,3 +270,38 @@ void op_itof(void) {
 	return;
 }
 
+void op_next(void) {
+	GPR[RS] = GC;
+	GC += GD;
+	return;
+}
+
+void op_acc(void) {
+	if (!(29<=RS && RS<=31)) {
+		fprintf(stderr, "acc: 1st operand must be between %%f29 to %%f31, but %%f%d was specified\n", RS);
+		STOP = 1;
+		return;
+	}
+	if (!(0<=RT && RT<=28)) {
+		fprintf(stderr, "acc: 2nd operand must be between %%f0 to %%f28, but %%f%d was specified\n", RT);
+		STOP = 1;
+		return;
+	}
+	FPR[RS] += FPR[RT];
+	return;
+}
+
+void op_fork_end(void) {
+	if (!PARALLEL) {
+		PARALLEL = 1;
+		PARALLEL_END_PC = PC;
+		GC = GPR[RT];
+		GD = GPR[RD];
+		PC = 0;
+	} else {
+		PARALLEL = 0;
+		PC = PARALLEL_END_PC;
+	}
+	return;
+}
+

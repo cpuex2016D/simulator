@@ -163,6 +163,22 @@ void prnt_itof(void) {
 	fprintf(stderr, "%d\titof\t%%f%d, %%r%d\n", PC, FT, RS);
 	return;
 }
+void prnt_next(void) {
+	fprintf(stderr, "%d\tnext\t%%r%d\n", PC, RS);
+	return;
+}
+void prnt_acc(void) {
+	fprintf(stderr, "%d\tacc\t%%f%d, %%f%d\n", PC, RS, RT);
+	return;
+}
+void prnt_fork_end(void) {
+	if (!PARALLEL) {
+		fprintf(stderr, "%d\tfork\t%%r%d, %%r%d\n", PC, RT, RD);
+	} else {
+		fprintf(stderr, "%d\tend\n", PC);
+	}
+	return;
+}
 
 
 

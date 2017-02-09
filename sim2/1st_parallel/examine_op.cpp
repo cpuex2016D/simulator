@@ -288,6 +288,26 @@ void examine_op(void) {
 			OP_EX = op_out;
 			OP_PRNT = prnt_out;
 			return;
+		} else if ((OP&0xFC000000) == 0x74000000) {
+			RS = GET_RS(OP);
+			OP_TYPE = NEXT_L;
+			OP_EX = op_next;
+			OP_PRNT = prnt_next;
+			return;
+		} else if ((OP&0xFC000000) == 0x78000000) {
+			RS = GET_RS(OP);
+			RT = GET_RT(OP);
+			OP_TYPE = ACC_L;
+			OP_EX = op_acc;
+			OP_PRNT = prnt_acc;
+			return;
+		} else if ((OP&0xFC000000) == 0x7C000000) {
+			RT = GET_RT(OP);
+			RD = GET_RD(OP);
+			OP_TYPE = FORK_END_L;
+			OP_EX = op_fork_end;
+			OP_PRNT = prnt_fork_end;
+			return;
 		}
 		break;
 	case 4:

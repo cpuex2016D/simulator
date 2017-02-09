@@ -7,6 +7,7 @@
 #include<unistd.h>
 #include<fcntl.h>
 #include<set>
+#include"sim.h"
 #include"examine_op.h"
 #define CPSWAP(X, Y) {char *emvc2m8 = X; X = Y; Y = emvc2m8;}
 #define WNSZ 0x100
@@ -25,12 +26,16 @@ void (*OP_PRNT) (void);
 int STOP;
 
 int PJ = 0;
-enum {ADD_L, ADDI_L, SUB_L, AND_L, ANDI_L, OR_L, ORI_L, NOR_L, SLL_L, SRL_L, SLT_L, SLTI_L, BEQ_L, BNE_L, J_L, JAL_L, JR_L, JALR_L, LW_L, LUI_L, SW_L, IN_L, OUT_L, BT_S_L, BF_S_L, ADD_S_L, SUB_S_L, MUL_S_L, DIV_S_L, MOV_S_L, NEG_S_L, ABS_S_L, SQRT_S_L, C_EQ_S_L, C_LT_S_L, C_LE_S_L, LW_S_L, SW_S_L, FTOI_L, ITOF_L, OP_TOTAL};
 unsigned long long OP_COUNT[OP_TOTAL] = {0};
 int OP_TYPE;
 unsigned long long COUNTS;
 
 set<int> BREAKPOINTS;
+
+int PARALLEL = 0;
+int PARALLEL_END_PC;
+int GC;
+int GD;
 
 
 
@@ -38,6 +43,7 @@ int simprepare(int, char*[], int*);
 
 void print_state(void) {
 	OP_PRNT();
+	fprintf(stderr, "mode: %s execution\n", PARALLEL ? "parallel" : "single");
 	fprintf(stderr, "GPR\n0-3\t%d\t%d\t%d\t%d\n4-7\t%d\t%d\t%d\t%d\n8-11\t%d\t%d\t%d\t%d\n12-15\t%d\t%d\t%d\t%d\n16-19\t%d\t%d\t%d\t%d\n20-23\t%d\t%d\t%d\t%d\n24-27\t%d\t%d\t%d\t%d\n28-31\t%d\t%X\t%X\t%d\nFPR FPCC: %s\n0-3\t%f\t%f\t%f\t%f\n4-7\t%f\t%f\t%f\t%f\n8-11\t%f\t%f\t%f\t%f\n12-15\t%f\t%f\t%f\t%f\n16-19\t%f\t%f\t%f\t%f\n20-23\t%f\t%f\t%f\t%f\n24-27\t%f\t%f\t%f\t%f\n28-31\t%f\t%f\t%f\t%f\n\n", GPR[0], GPR[1], GPR[2], GPR[3], GPR[4], GPR[5], GPR[6], GPR[7], GPR[8], GPR[9], GPR[10], GPR[11], GPR[12], GPR[13], GPR[14], GPR[15], GPR[16], GPR[17], GPR[18], GPR[19], GPR[20], GPR[21], GPR[22], GPR[23], GPR[24], GPR[25], GPR[26], GPR[27], GPR[28], GPR[29], GPR[30], GPR[31], FPCC, FPR[0], FPR[1], FPR[2], FPR[3], FPR[4], FPR[5], FPR[6], FPR[7], FPR[8], FPR[9], FPR[10], FPR[11], FPR[12], FPR[13], FPR[14], FPR[15], FPR[16], FPR[17], FPR[18], FPR[19], FPR[20], FPR[21], FPR[22], FPR[23], FPR[24], FPR[25], FPR[26], FPR[27], FPR[28], FPR[29], FPR[30], FPR[31]);
 	return;
 }
@@ -120,6 +126,10 @@ int main(int argc, char *argv[]) {
 					} else fprintf(stderr, "invalid\n");
 				} else if (p1[0] == 'p' && p1[1] == '\n') {
 					goto print_again;
+				} else if (p1[0] == 'p' && p1[1] == 'c') {
+					PC = (int)strtol(p1+3, NULL, 0);
+					OP = TEX[PC];
+					examine_op();
 				} else if (p1[0] == 'p' && p1[1] == 'j') {
 					PJ = !PJ;
 					fprintf(stderr, "print jump: %s\n", PJ ? "ON" : "OFF");

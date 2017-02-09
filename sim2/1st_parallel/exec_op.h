@@ -41,5 +41,8 @@ void op_lw_s(void);
 void op_sw_s(void);
 void op_ftoi(void);
 void op_itof(void);
+void op_next(void);
+void op_acc(void);
+void op_fork_end(void);
 
 #endif
