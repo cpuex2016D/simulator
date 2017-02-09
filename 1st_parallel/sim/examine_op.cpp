@@ -15,6 +15,7 @@
 #define GET_CCC(x) ((0x00000700 & (x)) >> 8)
 #define GET_COND(x) (0x0000000F & (x))
 
+void prnt_unknown(arg& ag) {fprintf(stderr, "-\n");}
 
 void examine_op_parent(uint32_t op, arg& ag) {
 	if (op>>26 == 0b011111) {
@@ -351,7 +352,8 @@ void examine_op_parent(uint32_t op, arg& ag) {
 	default:
 		break;
 	}
-	fprintf(stderr, "unknown operator\n");
+	fprintf(stderr, "unknown operator 0x%08X\n", op);
+	ag.OP_PRNT = prnt_unknown;
 	ag.STOP = 1;
 	return;
 }
@@ -702,7 +704,8 @@ void examine_op_child(uint32_t op, arg& ag) {
 	default:
 		break;
 	}
-	fprintf(stderr, "unknown operator\n");
+	fprintf(stderr, "unknown operator 0x%08X\n", op);
+	ag.OP_PRNT = prnt_unknown;
 	ag.STOP = 1;
 	return;
 }

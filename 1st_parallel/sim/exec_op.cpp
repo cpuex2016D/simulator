@@ -369,7 +369,6 @@ void op_fork(coreenv& ce, arg& ag) {
 				fprintf(stderr, "forked core stopped unexpectedly");
 			}
 			ag.STOP = 1;
-			return;
 		}
 		if (ta[i].repeat < ag.REPEAT) {
 			ag.REPEAT = ta[i].repeat;

@@ -24,7 +24,7 @@ void* invoke_parent_core(void *vparg) {
 		if (ag.REPEAT <= 0 || ag.STOP == 1 || bp.find(CE[0].PC) != bp.end()) {
 			fflush(stdout);
 		print_again:
-			fprintf(stderr, "\n%lld\t", ag.COUNTS);
+			fprintf(stderr, "\nparent\n%lld\t", ag.COUNTS);
 			print_state(CE[0], ag);
 			/*if (ag.STOP == 1) {
 				print_stats();

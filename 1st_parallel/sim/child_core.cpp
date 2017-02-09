@@ -20,13 +20,13 @@ void* invoke_child_core(void *vparg) {
 	char s1[100], s2[100] = "s\n";
 	char *p1 = s2, *p2 = s1;
 	int addr = 0, dhf = 0;
-	for(CE[coreindex].PC = 0; CE[coreindex].PC <= PTEX_LAST;) {
-		uint32_t op = PTEX[CE[coreindex].PC];
-		examine_op_parent(op, ag);
+	for(CE[coreindex].PC = 0; CE[coreindex].PC <= CTEX_LAST;) {
+		uint32_t op = CTEX[CE[coreindex].PC];
+		examine_op_child(op, ag);
 		if (ag.REPEAT <= 0 || ag.STOP == 1 || bp.find(CE[coreindex].PC) != bp.end()) {
 			fflush(stdout);
 		print_again:
-			fprintf(stderr, "\n%lld\t", ag.COUNTS);
+			fprintf(stderr, "\nchild %d\n%lld\t", coreindex, ag.COUNTS);
 			print_state(CE[coreindex], ag);
 			/*if (ag.STOP == 1) {
 				print_stats();
