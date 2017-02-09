@@ -270,6 +270,21 @@ void op_itof(void) {
 	return;
 }
 
+void op_fork(void) {
+	PARALLEL = 1;
+	PARALLEL_END_PC = PC;
+	GC = GPR[RT];
+	GD = GPR[RD];
+	PC = 0;
+	return;
+}
+
+void op_end(void) {
+	PARALLEL = 0;
+	PC = PARALLEL_END_PC;
+	return;
+}
+
 void op_next(void) {
 	GPR[RS] = GC;
 	GC += GD;
@@ -288,20 +303,6 @@ void op_acc(void) {
 		return;
 	}
 	FPR[RS] += FPR[RT];
-	return;
-}
-
-void op_fork_end(void) {
-	if (!PARALLEL) {
-		PARALLEL = 1;
-		PARALLEL_END_PC = PC;
-		GC = GPR[RT];
-		GD = GPR[RD];
-		PC = 0;
-	} else {
-		PARALLEL = 0;
-		PC = PARALLEL_END_PC;
-	}
 	return;
 }
 

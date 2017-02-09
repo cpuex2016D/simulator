@@ -41,8 +41,9 @@ void prnt_lw_s(void);
 void prnt_sw_s(void);
 void prnt_ftoi(void);
 void prnt_itof(void);
+void prnt_fork(void);
+void prnt_end(void);
 void prnt_next(void);
 void prnt_acc(void);
-void prnt_fork_end(void);
 
 #endif

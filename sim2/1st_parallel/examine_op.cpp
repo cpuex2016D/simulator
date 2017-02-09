@@ -302,11 +302,17 @@ void examine_op(void) {
 			OP_PRNT = prnt_acc;
 			return;
 		} else if ((OP&0xFC000000) == 0x7C000000) {
-			RT = GET_RT(OP);
-			RD = GET_RD(OP);
-			OP_TYPE = FORK_END_L;
-			OP_EX = op_fork_end;
-			OP_PRNT = prnt_fork_end;
+			if (!PARALLEL) {
+				RT = GET_RT(OP);
+				RD = GET_RD(OP);
+				OP_TYPE = FORK_L;
+				OP_EX = op_fork;
+				OP_PRNT = prnt_fork;
+			} else {
+				OP_TYPE = END_L;
+				OP_EX = op_end;
+				OP_PRNT = prnt_end;
+			}
 			return;
 		}
 		break;
