@@ -10,7 +10,7 @@ void* open_text(char *fname, int *fsize);
 void* open_data(char *fname, int *fsize);
 int simprepare(int argc, char *argv[]) {
 	if (argc != 5) {
-		fprintf(stderr, "specify 3 files: parent-text child-text data-text input");
+		fprintf(stderr, "specify 3 files: parent-text child-text data input");
 		return 0;
 	}
 	int fsize;

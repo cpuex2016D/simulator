@@ -124,8 +124,8 @@ void* invoke_child_core(void *vparg) {
 		
 		/* execution */
 		CE[coreindex].PC += 1;
-		ag.OP_EX(CE[coreindex], ag);
 		ag.REPEAT--; ag.COUNTS++;
+		ag.OP_EX(CE[coreindex], ag);
 		if (ag.STOP == 2) {
 			((thread_arg*)vparg)->repeat = ag.REPEAT;
 			return NULL;

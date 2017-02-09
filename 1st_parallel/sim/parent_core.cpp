@@ -122,8 +122,8 @@ void* invoke_parent_core(void *vparg) {
 		
 		/* execution */
 		CE[0].PC += 1;
-		ag.OP_EX(CE[0], ag);
 		ag.REPEAT--; ag.COUNTS++;
+		ag.OP_EX(CE[0], ag);
 		/*
 		OP_COUNT[OP_TYPE]++;
 		COUNTS++; //increment COUNTS

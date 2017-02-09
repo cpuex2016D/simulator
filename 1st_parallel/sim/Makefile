@@ -1,7 +1,7 @@
 sim: sim.o simprepare.o parent_core.o child_core.o examine_op.o exec_op.o prnt_op.o prnt_state_stats_memory.o
 	g++ -Wall $^ -o $@ -lm -lpthread 
 
-sim.o: sim.cpp sim.h
+sim.o: sim.cpp sim.h simprepare.h parent_core.h
 	g++ -Wall -c sim.cpp
 
 simprepare.o: simprepare.cpp sim.h
