@@ -23,10 +23,10 @@ void* invoke_child_core(void *vparg) {
 	char *p1 = s2, *p2 = s1;
 	int addr = 0, dhf = 0;
 	for(CE[coreindex].PC = 0; CE[coreindex].PC <= CTEX_LAST;) {
-		pthread_mutex_lock(&mtx);
 		uint32_t op = CTEX[CE[coreindex].PC];
 		examine_op_child(op, ag);
 		if (ag.REPEAT <= 0 || ag.STOP == 1 || bp.find(CE[coreindex].PC) != bp.end()) {
+			pthread_mutex_lock(&mtx);
 			fflush(stdout);
 		print_again:
 			fprintf(stderr, "\nchild %d\n%lld\t", coreindex, ag.COUNTS);
@@ -119,11 +119,11 @@ void* invoke_child_core(void *vparg) {
 					fprintf(stderr, "invalid\n");
 				}
 			}
+			pthread_mutex_unlock(&mtx);
 		}/* else if (continue_printing) {
 			fprintf(stderr, "\n%lld\t", counts);
 			print_state();
 		}*/
-		pthread_mutex_unlock(&mtx);
 		if (ag.STOP == 1) break;
 		
 		/* execution */
