@@ -47,7 +47,7 @@ extern map<char*, int, bool (*) (char*, char*)> LBM;
 			rn = 3; \
 		} \
 	} else throw "invalid register"; \
-	if (*p != ',' && *p != ' ' && *p != '\n') throw "invalid register"; \
+	if (*p != ',' && *p != ' ' && *p != '\n' && *p != '\t') throw "invalid register"; \
 	MV2TKN(p)
 
 
@@ -74,7 +74,7 @@ extern map<char*, int, bool (*) (char*, char*)> LBM;
 			fn = 3; \
 		} \
 	} else throw "invalid register"; \
-	if (*p != ',' && *p != ' ' && *p != '\n') throw "invalid register"; \
+	if (*p != ',' && *p != ' ' && *p != '\n' && *p != '\t') throw "invalid register"; \
 	MV2TKN(p)
 
 #define GETAN(an) \
@@ -100,7 +100,7 @@ extern map<char*, int, bool (*) (char*, char*)> LBM;
 			an = 3; \
 		} \
 	} else throw "invalid register"; \
-	if (*p != ',' && *p != ' ' && *p != '\n') throw "invalid register"; \
+	if (*p != ',' && *p != ' ' && *p != '\n' && *p != '\t') throw "invalid register"; \
 	MV2TKN(p)
 
 
@@ -134,7 +134,7 @@ extern map<char*, int, bool (*) (char*, char*)> LBM;
 		} \
 	} else throw "invalid register"; \
 	if (*(p++) != ')') throw "invalid argument"; \
-	if (*p != ',' && *p != ' ' && *p != '\n') throw "invalid register"; \
+	if (*p != ',' && *p != ' ' && *p != '\n' && *p != '\t') throw "invalid register"; \
 	MV2TKN(p)
 
 #define GETLABLE(c) \
