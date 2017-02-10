@@ -1,74 +1,85 @@
 #include<stdio.h>
 #include<stdint.h>
 #include<math.h>
+#include<string.h>
 #include"sim.h"
 #include"examine_op.h"
 
-void print_jump(uint32_t PC_from, uint32_t PC_to, char *description = "") {
-	fprintf(stderr, "%8llu jump from %5u to %5u%s\n", COUNTS, PC_from, PC_to, description);
+void Core::print_jump(uint32_t PC_from, uint32_t PC_to) {
+	if (!PARALLEL) {
+		fprintf(stderr, "%8llu jump from %5u to %5u\n", COUNTS, PC_from, PC_to);
+	} else {
+		fprintf(stderr, "%8llu CORE[%d] jump from %5u to %5u\n", COUNTS, my_num, PC_from, PC_to);
+	}
+}
+void print_fork(uint32_t PC_at) {
+	fprintf(stderr, "%8llu fork at %5u\n", COUNTS, PC_at);
+}
+void Core::print_end(uint32_t PC_at) {
+	fprintf(stderr, "%8llu CORE[%d] end at %5u\n", COUNTS, my_num, PC_at);
 }
 
-void op_add(void) {
+void Core::op_add(void) {
 	GPR[RD] = GPR[RS] + GPR[RT];
 	return;
 }
 
-void op_addi(void) {
+void Core::op_addi(void) {
 	GPR[RT] = GPR[RS] + C;
 	return;
 }
 
-void op_sub(void) {
+void Core::op_sub(void) {
 	GPR[RD] = GPR[RS] - GPR[RT];
 	return;
 }
 
-void op_and(void) {
+void Core::op_and(void) {
 	GPR[RD] = GPR[RS] & GPR[RT];
 	return;
 }
 
-void op_andi(void) {
+void Core::op_andi(void) {
 	GPR[RT] = GPR[RS] & C;
 	return;
 }
 
-void op_or(void) {
+void Core::op_or(void) {
 	GPR[RD] = GPR[RS] | GPR[RT];
 	return;
 }
 
-void op_ori(void) {
+void Core::op_ori(void) {
 	GPR[RT] = GPR[RS] | C;
 	return;
 }
 
-void op_nor(void) {
+void Core::op_nor(void) {
 	GPR[RD] = ~(GPR[RS] | GPR[RT]);
 	return;
 }
 
-void op_sll(void) {
+void Core::op_sll(void) {
 	GPR[RD] = GPR[RT] << C;
 	return;
 }
 
-void op_srl(void) {
+void Core::op_srl(void) {
 	GPR[RD] = GPR[RT] >> C;
 	return;
 }
 
-void op_slt(void) {
+void Core::op_slt(void) {
 	GPR[RD] = (int32_t)GPR[RS] <= (int32_t)GPR[RT];
 	return;
 }
 
-void op_slti(void) {
+void Core::op_slti(void) {
 	GPR[RT] = (int32_t)GPR[RS] <= (int32_t)C;
 	return;
 }
 
-void op_beq(void) {
+void Core::op_beq(void) {
 	if (GPR[RS] == GPR[RT]) {
 		uint32_t PC_from = PC - 1;
 		PC += C - 1;
@@ -77,7 +88,7 @@ void op_beq(void) {
 	return;
 }
 
-void op_bne(void) {
+void Core::op_bne(void) {
 	if (GPR[RS] != GPR[RT]) {
 		uint32_t PC_from = PC - 1;
 		PC += C - 1;
@@ -86,14 +97,14 @@ void op_bne(void) {
 	return;
 }
 
-void op_j(void) {
+void Core::op_j(void) {
 	uint32_t PC_from = PC - 1;
 	PC = C;
 	if (PJ) print_jump(PC_from, PC);
 	return;
 }
 
-void op_jal(void) {
+void Core::op_jal(void) {
 	uint32_t PC_from = PC - 1;
 	GPR[31] = PC;
 	PC = C;
@@ -101,14 +112,14 @@ void op_jal(void) {
 	return;
 }
 
-void op_jr(void) {
+void Core::op_jr(void) {
 	uint32_t PC_from = PC - 1;
 	PC = GPR[RS];
 	if (PJ) print_jump(PC_from, PC);
 	return;
 }
 
-void op_jalr(void) {
+void Core::op_jalr(void) {
 	uint32_t PC_from = PC - 1;
 	int temp;
 	temp = PC;
@@ -118,7 +129,7 @@ void op_jalr(void) {
 	return;
 }
 
-void op_lw(void) {
+void Core::op_lw(void) {
 	int addr;
 	addr = GPR[RS]+C;
 	if (!(0 <= addr && addr < 0x80000)) {
@@ -130,12 +141,12 @@ void op_lw(void) {
 	return;
 }
 
-void op_lui(void) {
+void Core::op_lui(void) {
 	GPR[RT] = ((uint32_t)C) << 16;
 	return;
 }
 
-void op_sw(void) {
+void Core::op_sw(void) {
 	int addr;
 	addr = GPR[RS]+C;
 	if (!(0 <= addr && addr < 0x80000)) {
@@ -143,11 +154,17 @@ void op_sw(void) {
 		STOP = 1;
 		return;
 	}
-	DAT[addr] = GPR[RT];
+	if (PARALLEL) {
+		DAT[addr] = GPR[RT];
+	} else {
+		for(int i=0; i<N_CORE; i++) {
+			CORE[i].DAT[addr] = GPR[RT];
+		}
+	}
 	return;
 }
 
-void op_in(void) {
+void Core::op_in(void) {
 	int inp;
 	inp = getc(IFILE);
 	if (inp == EOF) {
@@ -158,12 +175,12 @@ void op_in(void) {
 	return;
 }
 
-void op_out(void) {
+void Core::op_out(void) {
 	fwrite((char*)&GPR[RT], 1, 1, stdout);
 	return;
 }
 
-void op_bt_s(void) {
+void Core::op_bt_s(void) {
 	if (FPCC[CC] == '1') {
 		uint32_t PC_from = PC - 1;
 		PC += C - 1;
@@ -172,7 +189,7 @@ void op_bt_s(void) {
 	return;
 }
 
-void op_bf_s(void) {
+void Core::op_bf_s(void) {
 	if (FPCC[CC] == '0') {
 		uint32_t PC_from = PC - 1;
 		PC += C - 1;
@@ -182,61 +199,61 @@ void op_bf_s(void) {
 }
 
 
-void op_add_s(void) {
+void Core::op_add_s(void) {
 	FPR[FD] = FPR[FS] + FPR[FT];
 	return;
 }
 
-void op_sub_s(void) {
+void Core::op_sub_s(void) {
 	FPR[FD] = FPR[FS] - FPR[FT];
 	return;
 }
 
-void op_mul_s(void) {
+void Core::op_mul_s(void) {
 	FPR[FD] = FPR[FS] * FPR[FT];
 	return;
 }
 
-void op_div_s(void) {
+void Core::op_div_s(void) {
 	FPR[FD] = FPR[FS] / FPR[FT];
 	return;
 }
 
-void op_mov_s(void) {
+void Core::op_mov_s(void) {
 	FPR[FD] = FPR[FT];
 	return;
 }
 
-void op_neg_s(void) {
+void Core::op_neg_s(void) {
 	FPR[FD] = -FPR[FT];
 	return;
 }
 
-void op_abs_s(void) {
+void Core::op_abs_s(void) {
 	FPR[FD] = (FPR[FT] < 0) ? -FPR[FT] : FPR[FT];
 	return;
 }
 
-void op_sqrt_s(void) {
+void Core::op_sqrt_s(void) {
 	FPR[FD] = (float)sqrt((double)FPR[FT]);
 	return;
 }
-void op_c_eq_s(void) {
+void Core::op_c_eq_s(void) {
 	FPCC[CC] = FPR[FS] == FPR[FT] ? '1' : '0';
 	return;
 }
 
-void op_c_lt_s(void) {
+void Core::op_c_lt_s(void) {
 	FPCC[CC] = FPR[FS] < FPR[FT] ? '1' : '0';
 	return;
 }
 
-void op_c_le_s(void) {
+void Core::op_c_le_s(void) {
 	FPCC[CC] = FPR[FS] <= FPR[FT] ? '1' : '0';
 	return;
 }
 
-void op_lw_s(void) {
+void Core::op_lw_s(void) {
 	int addr;
 	addr = GPR[RS]+C;
 	if (!(0 <= addr && addr < 0x80000)) {
@@ -248,7 +265,7 @@ void op_lw_s(void) {
 	return;
 }
 
-void op_sw_s(void) {
+void Core::op_sw_s(void) {
 	int addr;
 	addr = GPR[RS]+C;
 	if (!(0 <= addr && addr < 0x80000)) {
@@ -256,44 +273,59 @@ void op_sw_s(void) {
 		STOP = 1;
 		return;
 	}
-	*((float*)&DAT[addr]) = FPR[FT];
+	if (PARALLEL) {
+		*((float*)&DAT[addr]) = FPR[FT];
+	} else {
+		for(int i=0; i<N_CORE; i++) {
+			*((float*)&CORE[i].DAT[addr]) = FPR[FT];
+		}
+	}
 	return;
 }
 
-void op_ftoi(void) {
+void Core::op_ftoi(void) {
 	GPR[RT] = lrintf(FPR[FS]);
 	return;
 }
 
-void op_itof(void) {
+void Core::op_itof(void) {
 	FPR[FT] = (float) ((int32_t)GPR[RS]);
 	return;
 }
 
-void op_fork(void) {
+void Core::op_fork(void) {
 	PARALLEL = 1;
 	PARALLEL_END_PC = PC;
 	GC = GPR[RT];
 	GD = GPR[RD];
-	if (PJ) print_jump(PC-1, 0, " (fork)");
-	PC = 0;
+	if (PJ) print_fork(PC-1);
+	for(int i=0; i<N_CORE; i++) {
+		CORE[i].PC = 0;
+	}
+	for(int i=1; i<N_CORE; i++) {
+		memcpy(CORE[i].GPR, CORE[0].GPR, 4*32);
+		memcpy(CORE[i].FPR, CORE[0].FPR, 4*32);
+		memcpy(CORE[i].FPCC, CORE[0].FPCC, 9);
+	}
 	return;
 }
 
-void op_end(void) {
-	PARALLEL = 0;
-	if (PJ) print_jump(PC-1, PARALLEL_END_PC, " (end)");
-	PC = PARALLEL_END_PC;
+void Core::op_end(void) {
+	PC = PC - 1;
+	if (!ended) {
+		ended = 1;
+		if (PJ) print_end(PC-1);
+	}
 	return;
 }
 
-void op_next(void) {
+void Core::op_next(void) {
 	GPR[RS] = GC;
 	GC += GD;
 	return;
 }
 
-void op_acc(void) {
+void Core::op_acc(void) {
 	if (!(29<=RS && RS<=31)) {
 		fprintf(stderr, "acc: 1st operand must be between %%f29 to %%f31, but %%f%d was specified\n", RS);
 		STOP = 1;
@@ -304,7 +336,7 @@ void op_acc(void) {
 		STOP = 1;
 		return;
 	}
-	FPR[RS] += FPR[RT];
+	CORE[0].FPR[RS] += FPR[RT];
 	return;
 }
 
