@@ -274,7 +274,7 @@ int main(int argc, char *argv[]) {
 		
 		/* execution */
 		int all_ended = 1;
-		for(int i=0; i<(PARALLEL ? N_CORE : 1); i++) {
+		for(int i=0, i0 = PARALLEL ? N_CORE : 1; i<i0; i++) {
 			CORE[i].PC += 1;
 			(CORE[i].*CORE[i].OP_EX)();
 			OP_COUNT[CORE[i].OP_TYPE]++;
