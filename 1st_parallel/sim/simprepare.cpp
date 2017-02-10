@@ -29,7 +29,7 @@ int simprepare(int argc, char *argv[]) {
 		return 0;
 	}
 
-	for(int c = 0; c < 4; c++) {
+	for(int c = 0; c < CORE_NUM; c++) {
 		/*for(int i = 0; i < 32; i++) {
 			CE[c].GPR[i] = 0;
 			CE[c].FPR[i] = 0.0;
