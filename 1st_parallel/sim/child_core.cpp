@@ -22,6 +22,7 @@ void* invoke_child_core(void *vparg) {
 	char s1[100], s2[100] = "s\n";
 	char *p1 = s2, *p2 = s1;
 	int addr = 0, dhf = 0;
+	ag.STOP = 0;
 	for(CE[coreindex].PC = 0; CE[coreindex].PC <= CTEX_LAST;) {
 		uint32_t op = CTEX[CE[coreindex].PC];
 		examine_op_child(op, ag);
