@@ -56,7 +56,7 @@ void Core::print_state(void) {
 		"20-23\t%d\t%d\t%d\t%d\n"
 		"24-27\t%d\t%d\t%d\t%d\n"
 		"28-31\t%d\t%X\t%X\t%d\n"
-		"FPR FPCC: %s\n"
+		"FPR\n"
 		"0-3\t%f\t%f\t%f\t%f\n"
 		"4-7\t%f\t%f\t%f\t%f\n"
 		"8-11\t%f\t%f\t%f\t%f\n"
@@ -65,12 +65,53 @@ void Core::print_state(void) {
 		"20-23\t%f\t%f\t%f\t%f\n"
 		"24-27\t%f\t%f\t%f\t%f\n"
 		"28-31\t%f\t%f\t%f\t%f\n\n",
-		GPR[0], GPR[1], GPR[2], GPR[3], GPR[4], GPR[5], GPR[6], GPR[7], GPR[8], GPR[9], GPR[10], GPR[11], GPR[12], GPR[13], GPR[14], GPR[15], GPR[16], GPR[17], GPR[18], GPR[19], GPR[20], GPR[21], GPR[22], GPR[23], GPR[24], GPR[25], GPR[26], GPR[27], GPR[28], GPR[29], GPR[30], GPR[31], FPCC, FPR[0], FPR[1], FPR[2], FPR[3], FPR[4], FPR[5], FPR[6], FPR[7], FPR[8], FPR[9], FPR[10], FPR[11], FPR[12], FPR[13], FPR[14], FPR[15], FPR[16], FPR[17], FPR[18], FPR[19], FPR[20], FPR[21], FPR[22], FPR[23], FPR[24], FPR[25], FPR[26], FPR[27], FPR[28], FPR[29], FPR[30], FPR[31]
+		GPR[0], GPR[1], GPR[2], GPR[3], GPR[4], GPR[5], GPR[6], GPR[7], GPR[8], GPR[9], GPR[10], GPR[11], GPR[12], GPR[13], GPR[14], GPR[15], GPR[16], GPR[17], GPR[18], GPR[19], GPR[20], GPR[21], GPR[22], GPR[23], GPR[24], GPR[25], GPR[26], GPR[27], GPR[28], GPR[29], GPR[30], GPR[31], FPR[0], FPR[1], FPR[2], FPR[3], FPR[4], FPR[5], FPR[6], FPR[7], FPR[8], FPR[9], FPR[10], FPR[11], FPR[12], FPR[13], FPR[14], FPR[15], FPR[16], FPR[17], FPR[18], FPR[19], FPR[20], FPR[21], FPR[22], FPR[23], FPR[24], FPR[25], FPR[26], FPR[27], FPR[28], FPR[29], FPR[30], FPR[31]
 	);
 }
 
 void print_stats(void) {
-	fprintf(stderr, "\nadd:\t%llu\naddi:\t%llu\nsub:\t%llu\nand:\t%llu\nandi:\t%llu\nor:\t%llu\nori:\t%llu\nnor:\t%llu\nsll:\t%llu\nsrl:\t%llu\nslt:\t%llu\nslti:\t%llu\nbeq:\t%llu\nbne:\t%llu\nj:\t%llu\njal:\t%llu\njr:\t%llu\njalr:\t%llu\nlw:\t%llu\nlui:\t%llu\nsw:\t%llu\nin:\t%llu\nout:\t%llu\nbt.s:\t%llu\nbf.s:\t%llu\nadd.s:\t%llu\nsub.s:\t%llu\nmul.s:\t%llu\ndiv.s:\t%llu\nmov.s:\t%llu\nneg.s:\t%llu\nabs.s:\t%llu\nsqrt.s:\t%llu\nc.eq.s:\t%llu\nc.lt.s:\t%llu\nc.le.s:\t%llu\nlw.s:\t%llu\nsw.s:\t%llu\nftoi:\t%llu\nitof:\t%llu\nfork:\t%llu\nend:\t%llu\nnext:\t%llu\nacc:\t%llu\n", OP_COUNT[ADD_L], OP_COUNT[ADDI_L], OP_COUNT[SUB_L], OP_COUNT[AND_L], OP_COUNT[ANDI_L], OP_COUNT[OR_L], OP_COUNT[ORI_L], OP_COUNT[NOR_L], OP_COUNT[SLL_L], OP_COUNT[SRL_L], OP_COUNT[SLT_L], OP_COUNT[SLTI_L], OP_COUNT[BEQ_L], OP_COUNT[BNE_L], OP_COUNT[J_L], OP_COUNT[JAL_L], OP_COUNT[JR_L], OP_COUNT[JALR_L], OP_COUNT[LW_L], OP_COUNT[LUI_L], OP_COUNT[SW_L], OP_COUNT[IN_L], OP_COUNT[OUT_L], OP_COUNT[BT_S_L], OP_COUNT[BF_S_L], OP_COUNT[ADD_S_L], OP_COUNT[SUB_S_L], OP_COUNT[MUL_S_L], OP_COUNT[DIV_S_L], OP_COUNT[MOV_S_L], OP_COUNT[NEG_S_L], OP_COUNT[ABS_S_L], OP_COUNT[SQRT_S_L], OP_COUNT[C_EQ_S_L], OP_COUNT[C_LT_S_L], OP_COUNT[C_LE_S_L], OP_COUNT[LW_S_L], OP_COUNT[SW_S_L], OP_COUNT[FTOI_L], OP_COUNT[ITOF_L], OP_COUNT[FORK_L], OP_COUNT[END_L], OP_COUNT[NEXT_L], OP_COUNT[ACC_L]);
+	fprintf(stderr, "\n");
+	fprintf(stderr, "add:\t%llu\n", OP_COUNT[ADD_L]);
+	fprintf(stderr, "addi:\t%llu\n", OP_COUNT[ADDI_L]);
+	fprintf(stderr, "sub:\t%llu\n", OP_COUNT[SUB_L]);
+	fprintf(stderr, "next:\t%llu\n", OP_COUNT[NEXT_L]);
+	fprintf(stderr, "sl2add:\t%llu\n", OP_COUNT[SL2ADD_L]);
+	fprintf(stderr, "sl2addi:\t%llu\n", OP_COUNT[SL2ADDI_L]);
+	fprintf(stderr, "mov:\t%llu\n", OP_COUNT[MOV_L]);
+	fprintf(stderr, "movi:\t%llu\n", OP_COUNT[MOVI_L]);
+	fprintf(stderr, "fadd:\t%llu\n", OP_COUNT[FADD_L]);
+	fprintf(stderr, "fsub:\t%llu\n", OP_COUNT[FSUB_L]);
+	fprintf(stderr, "fmul:\t%llu\n", OP_COUNT[FMUL_L]);
+	fprintf(stderr, "fdiv:\t%llu\n", OP_COUNT[FDIV_L]);
+	fprintf(stderr, "fmov:\t%llu\n", OP_COUNT[FMOV_L]);
+	fprintf(stderr, "fneg:\t%llu\n", OP_COUNT[FNEG_L]);
+	fprintf(stderr, "fabs:\t%llu\n", OP_COUNT[FABS_L]);
+	fprintf(stderr, "fsqrt:\t%llu\n", OP_COUNT[FSQRT_L]);
+	fprintf(stderr, "lw:\t%llu\n", OP_COUNT[LW_L]);
+	fprintf(stderr, "lwi:\t%llu\n", OP_COUNT[LWI_L]);
+	fprintf(stderr, "flw:\t%llu\n", OP_COUNT[FLW_L]);
+	fprintf(stderr, "flwi:\t%llu\n", OP_COUNT[FLWI_L]);
+	fprintf(stderr, "sw:\t%llu\n", OP_COUNT[SW_L]);
+	fprintf(stderr, "swi:\t%llu\n", OP_COUNT[SWI_L]);
+	fprintf(stderr, "fsw:\t%llu\n", OP_COUNT[FSW_L]);
+	fprintf(stderr, "fswi:\t%llu\n", OP_COUNT[FSWI_L]);
+	fprintf(stderr, "ftoi:\t%llu\n", OP_COUNT[FTOI_L]);
+	fprintf(stderr, "itof:\t%llu\n", OP_COUNT[ITOF_L]);
+	fprintf(stderr, "in:\t%llu\n", OP_COUNT[IN_L]);
+	fprintf(stderr, "fin:\t%llu\n", OP_COUNT[FIN_L]);
+	fprintf(stderr, "out:\t%llu\n", OP_COUNT[OUT_L]);
+	fprintf(stderr, "jr:\t%llu\n", OP_COUNT[JR_L]);
+	fprintf(stderr, "acc:\t%llu\n", OP_COUNT[ACC_L]);
+	fprintf(stderr, "fork:\t%llu\n", OP_COUNT[FORK_L]);
+	fprintf(stderr, "end:\t%llu\n", OP_COUNT[END_L]);
+	fprintf(stderr, "j:\t%llu\n", OP_COUNT[J_L]);
+	fprintf(stderr, "jal:\t%llu\n", OP_COUNT[JAL_L]);
+	fprintf(stderr, "fbz:\t%llu\n", OP_COUNT[FBZ_L]);
+	fprintf(stderr, "fble:\t%llu\n", OP_COUNT[FBLE_L]);
+	fprintf(stderr, "be:\t%llu\n", OP_COUNT[BE_L]);
+	fprintf(stderr, "bei:\t%llu\n", OP_COUNT[BEI_L]);
+	fprintf(stderr, "ble:\t%llu\n", OP_COUNT[BLE_L]);
+	fprintf(stderr, "blei:\t%llu\n", OP_COUNT[BLEI_L]);
 	for(int i=0; i<N_CORE; i++) {
 		CORE[i].print_stats();
 	}
@@ -103,20 +144,6 @@ void Core::print_memory(int addr, int dhf) {
 				*((float*)(DAT+line)), *((float*)(DAT+line+1)), *((float*)(DAT+line+2)), *((float*)(DAT+line+3)), 
 				*((float*)(DAT+line+4)), *((float*)(DAT+line+5)), *((float*)(DAT+line+6)), *((float*)(DAT+line+7)));
 		}
-	}
-}
-
-void Core::update_func_depth(void) {
-	switch(OP_TYPE) {
-	case JAL_L:
-		++current_func_depth;
-		if (current_func_depth > max_func_depth) {
-			max_func_depth = current_func_depth;
-		}
-		break;
-	case JR_L:
-		--current_func_depth;
-		break;
 	}
 }
 
@@ -278,7 +305,6 @@ int main(int argc, char *argv[]) {
 			CORE[i].PC += 1;
 			(CORE[i].*CORE[i].OP_EX)();
 			OP_COUNT[CORE[i].OP_TYPE]++;
-			CORE[i].update_func_depth();
 			if (!CORE[i].ended) all_ended = 0;
 		}
 		if (all_ended) {
@@ -349,8 +375,8 @@ int simprepare(int argc, char *argv[], int *lastpc) {
 		return 1;
 	}
 	fsize = statbuf.st_size;
-	if (fsize >= 1024*1024*1) {
-		fprintf(stderr, "data file size is too large\nshould be less than 1 MB\n");
+	if (fsize >= DAT_BYTE_SIZE) {
+		fprintf(stderr, "data file size is too large\n");
 		return 1;
 	}
 	p = (char *)CORE[0].DAT;
@@ -374,8 +400,7 @@ int simprepare(int argc, char *argv[], int *lastpc) {
 		return 1;
 	}
 
-	CORE[0].GPR[0] = 0;
-	CORE[0].GPR[29] = fsize/4;
-	CORE[0].GPR[30] = 0x40000;
+	CORE[0].GPR[31] = fsize/4;
+	CORE[0].GPR[30] = DAT_WORD_SIZE-1;
 	return 0;
 }

@@ -6,305 +6,277 @@
 #include"exec_op.h"
 #include"sim.h"
 
-#define GET_RS(x) ((0x03E00000 & (x)) >> 21)
-#define GET_RT(x) ((0x001F0000 & (x)) >> 16)
-#define GET_RD(x) ((0x0000F800 & (x)) >> 11)
-#define GET_LC(x) (0x03FFFFFF & (x))
-#define GET_SC(x) (0x0000FFFF & (x))
-#define GET_SSC(x) ((0x000007C0 & (x)) >> 6)
-#define GET_BCC(x) ((0x001C0000 & (x)) >> 18)
-#define GET_FT(x) ((0x001F0000 & (x)) >> 16)
-#define GET_FS(x) ((0x0000F800 & (x)) >> 11)
-#define GET_FD(x) ((0x000007C0 & (x)) >> 6)
-#define GET_CCC(x) ((0x00000700 & (x)) >> 8)
-#define GET_COND(x) (0x0000000F & (x))
+#define GET_R0(x) ((0x03E00000 & (x)) >> 21)
+#define GET_R1(x) ((0x001F0000 & (x)) >> 16)
+#define GET_R2(x) ((0x0000F800 & (x)) >> 11)
+#define GET_C_LWI(x) (0x0001FFFF & (x))
+#define GET_C_SW(x) ((int16_t)(((0x03E00000 & (x)) >> 10) | (0x000007FF & (x))))
+#define GET_C_SWI(x) (((0x03E00000 & (x)) >> 10) | (0x000107FF & (x)))
+#define GET_C_J(x) (((0x00E00000 & (x)) >> 10) | (0x000007FF & (x)))
+#define GET_C2_SUB(x) ((((0x0F000000 & (x)) << 4 >> 12) | (0x0000F800 & (x))) >> 11)
+#define GET_C2(x) GET_C2_SUB((int32_t)x)
 
 
 void Core::examine_op(void) {
-	switch(OP>>29) {
-	case 0: // add sub and or nor slt j jal beq bne
-		switch(OP>>26) {
-		case 0:
-			if (OP&0x20) {
-				RD = GET_RD(OP);
-				RS = GET_RS(OP);
-				RT = GET_RT(OP);
-				switch(OP&0x3F) {
-				case 0x20:
-					OP_TYPE = ADD_L;
-					OP_EX = &Core::op_add;
-					OP_PRNT = &Core::prnt_add;
-					return;
-				case 0x22:
-					OP_TYPE = SUB_L;
-					OP_EX = &Core::op_sub;
-					OP_PRNT = &Core::prnt_sub;
-					return;
-				case 0x24:
-					OP_TYPE = AND_L;
-					OP_EX = &Core::op_and;
-					OP_PRNT = &Core::prnt_and;
-					return;
-				case 0x25:
-					OP_TYPE = OR_L;
-					OP_EX = &Core::op_or;
-					OP_PRNT = &Core::prnt_or;
-					return;
-				case 0x27:
-					OP_TYPE = NOR_L;
-					OP_EX = &Core::op_nor;
-					OP_PRNT = &Core::prnt_nor;
-					return;
-				case 0x2A:
-					OP_TYPE = SLT_L;
-					OP_EX = &Core::op_slt;
-					OP_PRNT = &Core::prnt_slt;
-					return;
-				default:
-					break;
-				}
-			} else if ((OP&0x3F) == 0) {
-				RD = GET_RD(OP);
-				RT = GET_RT(OP);
-				C = GET_SSC(OP);
-				OP_TYPE = SLL_L;
-				OP_EX = &Core::op_sll;
-				OP_PRNT = &Core::prnt_sll;
-				return;
-			} else if ((OP&0x3F) == 2) {
-				RD = GET_RD(OP);
-				RT = GET_RT(OP);
-				C = GET_SSC(OP);
-				OP_TYPE = SRL_L;
-				OP_EX = &Core::op_srl;
-				OP_PRNT = &Core::prnt_srl;
-				return;
-			} else if ((OP&0x3F) == 8) {
-				RS = GET_RS(OP);
-				OP_TYPE = JR_L;
-				OP_EX = &Core::op_jr;
-				OP_PRNT = &Core::prnt_jr;
-				return;
-			} else if ((OP&0x3F) == 9) {
-				RS = GET_RS(OP);
-				OP_TYPE = JALR_L;
-				OP_EX = &Core::op_jalr;
-				OP_PRNT = &Core::prnt_jalr;
-				return;
-			}
-			break;
-		case 2:
-			C = GET_LC(OP);
-			OP_TYPE = J_L;
-			OP_EX = &Core::op_j;
-			OP_PRNT = &Core::prnt_j;
-			return;
-		case 3:
-			C = GET_LC(OP);
-			OP_TYPE = JAL_L;
-			OP_EX = &Core::op_jal;
-			OP_PRNT = &Core::prnt_jal;
-			return;
-		case 4:
-			RS = GET_RS(OP);
-			RT = GET_RT(OP);
-			C = (int16_t)OP;
-			OP_TYPE = BEQ_L;
-			OP_EX = &Core::op_beq;
-			OP_PRNT = &Core::prnt_beq;
-			return;
-		case 5:
-			RS = GET_RS(OP);
-			RT = GET_RT(OP);
-			C = (int16_t)OP;
-			OP_TYPE = BNE_L;
-			OP_EX = &Core::op_bne;
-			OP_PRNT = &Core::prnt_bne;
-			return;
-		default:
-			break;
-		}
-		break;
-	case 1: // addi slti andi ori lui
+	switch((OP>>29)&7) {
+	case 0:
 		switch((OP>>26)&7) {
 		case 0:
-			RT = GET_RT(OP);
-			RS = GET_RS(OP);
-			C = (int16_t)OP;
+			OP_TYPE = ADD_L;
+			OP_EX = &Core::op_add;
+			OP_PRNT = &Core::prnt_add;
+			R0 = GET_R0(OP);
+			R1 = GET_R1(OP);
+			R2 = GET_R2(OP);
+			return;
+		case 1:
 			OP_TYPE = ADDI_L;
 			OP_EX = &Core::op_addi;
 			OP_PRNT = &Core::prnt_addi;
+			R0 = GET_R0(OP);
+			R1 = GET_R1(OP);
+			C = (int16_t)OP;
 			return;
 		case 2:
-			RT = GET_RT(OP);
-			RS = GET_RS(OP);
-			C = (int16_t)OP;
-			OP_TYPE = SLTI_L;
-			OP_EX = &Core::op_slti;
-			OP_PRNT = &Core::prnt_slti;
+			OP_TYPE = SUB_L;
+			OP_EX = &Core::op_sub;
+			OP_PRNT = &Core::prnt_sub;
+			R0 = GET_R0(OP);
+			R1 = GET_R2(OP);  //R1とR2の位置が逆
+			R2 = GET_R1(OP);
+			return;
+		case 3:
+			OP_TYPE = NEXT_L;
+			OP_EX = &Core::op_next;
+			OP_PRNT = &Core::prnt_next;
+			R0 = GET_R0(OP);
 			return;
 		case 4:
-			RT = GET_RT(OP);
-			RS = GET_RS(OP);
-			C = (uint16_t)OP;
-			OP_TYPE = ANDI_L;
-			OP_EX = &Core::op_andi;
-			OP_PRNT = &Core::prnt_andi;
+			OP_TYPE = SL2ADD_L;
+			OP_EX = &Core::op_sl2add;
+			OP_PRNT = &Core::prnt_sl2add;
+			R0 = GET_R0(OP);
+			R1 = GET_R1(OP);
+			R2 = GET_R2(OP);
 			return;
 		case 5:
-			RT = GET_RT(OP);
-			RS = GET_RS(OP);
-			C = (uint16_t)OP;
-			OP_TYPE = ORI_L;
-			OP_EX = &Core::op_ori;
-			OP_PRNT = &Core::prnt_ori;
+			OP_TYPE = SL2ADDI_L;
+			OP_EX = &Core::op_sl2addi;
+			OP_PRNT = &Core::prnt_sl2addi;
+			R0 = GET_R0(OP);
+			R1 = GET_R1(OP);
+			C = (int16_t)OP;
+			return;
+		case 6:
+			OP_TYPE = MOV_L;
+			OP_EX = &Core::op_mov;
+			OP_PRNT = &Core::prnt_mov;
+			R0 = GET_R0(OP);
+			R1 = GET_R1(OP);
 			return;
 		case 7:
-			RT = GET_RT(OP);
-			C = (uint16_t)OP;
-			OP_TYPE = LUI_L;
-			OP_EX = &Core::op_lui;
-			OP_PRNT = &Core::prnt_lui;
+			OP_TYPE = MOVI_L;
+			OP_EX = &Core::op_movi;
+			OP_PRNT = &Core::prnt_movi;
+			R0 = GET_R0(OP);
+			C = (int16_t)OP;
 			return;
-		default:
-			break;
+		}
+		break;
+	case 1:
+		switch((OP>>26)&7) {
+		case 0:
+			OP_TYPE = FADD_L;
+			OP_EX = &Core::op_fadd;
+			OP_PRNT = &Core::prnt_fadd;
+			R0 = GET_R0(OP);
+			R1 = GET_R1(OP);
+			R2 = GET_R2(OP);
+			return;
+		case 1:
+			OP_TYPE = FSUB_L;
+			OP_EX = &Core::op_fsub;
+			OP_PRNT = &Core::prnt_fsub;
+			R0 = GET_R0(OP);
+			R1 = GET_R1(OP);
+			R2 = GET_R2(OP);
+			return;
+		case 2:
+			OP_TYPE = FMUL_L;
+			OP_EX = &Core::op_fmul;
+			OP_PRNT = &Core::prnt_fmul;
+			R0 = GET_R0(OP);
+			R1 = GET_R1(OP);
+			R2 = GET_R2(OP);
+			return;
+		case 3:
+			OP_TYPE = FDIV_L;
+			OP_EX = &Core::op_fdiv;
+			OP_PRNT = &Core::prnt_fdiv;
+			R0 = GET_R0(OP);
+			R1 = GET_R1(OP);
+			R2 = GET_R2(OP);
+			return;
+		case 4:
+			OP_TYPE = FMOV_L;
+			OP_EX = &Core::op_fmov;
+			OP_PRNT = &Core::prnt_fmov;
+			R0 = GET_R0(OP);
+			R1 = GET_R1(OP);
+			return;
+		case 5:
+			OP_TYPE = FNEG_L;
+			OP_EX = &Core::op_fneg;
+			OP_PRNT = &Core::prnt_fneg;
+			R0 = GET_R0(OP);
+			R1 = GET_R1(OP);
+			return;
+		case 6:
+			OP_TYPE = FABS_L;
+			OP_EX = &Core::op_fabs;
+			OP_PRNT = &Core::prnt_fabs;
+			R0 = GET_R0(OP);
+			R1 = GET_R1(OP);
+			return;
+		case 7:
+			OP_TYPE = FSQRT_L;
+			OP_EX = &Core::op_fsqrt;
+			OP_PRNT = &Core::prnt_fsqrt;
+			R0 = GET_R0(OP);
+			R1 = GET_R1(OP);
+			return;
 		}
 		break;
 	case 2:
-		if ((OP&0xFFE00000) == 0x46000000) {
-			//add.s sub.s mul.s div.s mov.s neg.s abs.s sqrt.s c.eq.s c.lt.s c.le.s
-			FT = GET_FT(OP);
-			if (OP&0x4) {
-				switch(OP&0x3F) {
-				case 6:
-					FD = GET_FD(OP);
-					OP_TYPE = MOV_S_L;
-					OP_EX = &Core::op_mov_s;
-					OP_PRNT = &Core::prnt_mov_s;
-					return;
-				case 7:
-					FD = GET_FD(OP);
-					OP_TYPE = NEG_S_L;
-					OP_EX = &Core::op_neg_s;
-					OP_PRNT = &Core::prnt_neg_s;
-					return;
-				case 5:
-					FD = GET_FD(OP);
-					OP_TYPE = ABS_S_L;
-					OP_EX = &Core::op_abs_s;
-					OP_PRNT = &Core::prnt_abs_s;
-					return;
-				case 4:
-					FD = GET_FD(OP);
-					OP_TYPE = SQRT_S_L;
-					OP_EX = &Core::op_sqrt_s;
-					OP_PRNT = &Core::prnt_sqrt_s;
-					return;
-				case 0x3C:
-					FD = GET_FD(OP);
-					FS = GET_FS(OP);
-					CC = GET_CCC(OP);
-					OP_TYPE = C_LT_S_L;
-					OP_EX = &Core::op_c_lt_s;
-					OP_PRNT = &Core::prnt_c_lt_s;
-					return;
-				case 0x3E:
-					FD = GET_FD(OP);
-					FS = GET_FS(OP);
-					CC = GET_CCC(OP);
-					OP_TYPE = C_LE_S_L;
-					OP_EX = &Core::op_c_le_s;
-					OP_PRNT = &Core::prnt_c_le_s;
-					return;
-				default:
-					break;
-				}
-			} else {
-				FS = GET_FS(OP);
-				switch(OP&0x3F) {
-				case 0:
-					FD = GET_FD(OP);
-					OP_TYPE = ADD_S_L;
-					OP_EX = &Core::op_add_s;
-					OP_PRNT = &Core::prnt_add_s;
-					return;
-				case 1:
-					FD = GET_FD(OP);
-					OP_TYPE = SUB_S_L;
-					OP_EX = &Core::op_sub_s;
-					OP_PRNT = &Core::prnt_sub_s;
-					return;
-				case 2:
-					FD = GET_FD(OP);
-					OP_TYPE = MUL_S_L;
-					OP_EX = &Core::op_mul_s;
-					OP_PRNT = &Core::prnt_mul_s;
-					return;
-				case 3:
-					FD = GET_FD(OP);
-					OP_TYPE = DIV_S_L;
-					OP_EX = &Core::op_div_s;
-					OP_PRNT = &Core::prnt_div_s;
-					return;
-				case 0x32:
-					CC = GET_CCC(OP);
-					OP_TYPE = C_EQ_S_L;
-					OP_EX = &Core::op_c_eq_s;
-					OP_PRNT = &Core::prnt_c_eq_s;
-					return;
-				default:
-					break;
-				}
-			}
-		} else if ((OP&0xFFE30000) == 0x45010000) {
-			CC = GET_BCC(OP);
+		switch((OP>>26)&7) {
+		case 0:
+			OP_TYPE = LW_L;
+			OP_EX = &Core::op_lw;
+			OP_PRNT = &Core::prnt_lw;
+			R0 = GET_R0(OP);
+			R1 = GET_R1(OP);
 			C = (int16_t)OP;
-			OP_TYPE = BT_S_L;
-			OP_EX = &Core::op_bt_s;
-			OP_PRNT = &Core::prnt_bt_s;
 			return;
-		} else if ((OP&0xFFE30000) == 0x45000000) {
-			CC = GET_BCC(OP);
+		case 1:
+			OP_TYPE = LWI_L;
+			OP_EX = &Core::op_lwi;
+			OP_PRNT = &Core::prnt_lwi;
+			R0 = GET_R0(OP);
+			C = GET_C_LWI(OP);
+			return;
+		case 2:
+			OP_TYPE = FLW_L;
+			OP_EX = &Core::op_flw;
+			OP_PRNT = &Core::prnt_flw;
+			R0 = GET_R0(OP);
+			R1 = GET_R1(OP);
 			C = (int16_t)OP;
-			OP_TYPE = BF_S_L;
-			OP_EX = &Core::op_bf_s;
-			OP_PRNT = &Core::prnt_bf_s;
+			return;
+		case 3:
+			OP_TYPE = FLWI_L;
+			OP_EX = &Core::op_flwi;
+			OP_PRNT = &Core::prnt_flwi;
+			R0 = GET_R0(OP);
+			C = GET_C_LWI(OP);
+			return;
+		case 4:
+			OP_TYPE = SW_L;
+			OP_EX = &Core::op_sw;
+			OP_PRNT = &Core::prnt_sw;
+			R1 = GET_R1(OP);
+			R2 = GET_R2(OP);
+			C = GET_C_SW(OP);
+			return;
+		case 5:
+			OP_TYPE = SWI_L;
+			OP_EX = &Core::op_swi;
+			OP_PRNT = &Core::prnt_swi;
+			R2 = GET_R2(OP);
+			C = GET_C_SWI(OP);
+			return;
+		case 6:
+			OP_TYPE = FSW_L;
+			OP_EX = &Core::op_fsw;
+			OP_PRNT = &Core::prnt_fsw;
+			R1 = GET_R1(OP);
+			R2 = GET_R2(OP);
+			C = GET_C_SW(OP);
+			return;
+		case 7:
+			OP_TYPE = FSWI_L;
+			OP_EX = &Core::op_fswi;
+			OP_PRNT = &Core::prnt_fswi;
+			R2 = GET_R2(OP);
+			C = GET_C_SWI(OP);
 			return;
 		}
 		break;
 	case 3:
-		if ((OP&0xFC000000) == 0x68000000) {
-			RT = GET_RT(OP);
+		switch((OP>>26)&7) {
+		case 0:
+			OP_TYPE = FTOI_L;
+			OP_EX = &Core::op_ftoi;
+			OP_PRNT = &Core::prnt_ftoi;
+			R0 = GET_R0(OP);
+			R1 = GET_R1(OP);
+			return;
+		case 1:
+			OP_TYPE = ITOF_L;
+			OP_EX = &Core::op_itof;
+			OP_PRNT = &Core::prnt_itof;
+			R0 = GET_R0(OP);
+			R1 = GET_R1(OP);
+			return;
+		case 2:
 			OP_TYPE = IN_L;
 			OP_EX = &Core::op_in;
 			OP_PRNT = &Core::prnt_in;
+			R0 = GET_R0(OP);
 			return;
-		} else if ((OP&0xFC000000) == 0x6C000000) {
-			RT = GET_RT(OP);
+		case 3:
+			OP_TYPE = FIN_L;
+			OP_EX = &Core::op_fin;
+			OP_PRNT = &Core::prnt_fin;
+			R0 = GET_R0(OP);
+			return;
+		case 4:
 			OP_TYPE = OUT_L;
 			OP_EX = &Core::op_out;
 			OP_PRNT = &Core::prnt_out;
+			R1 = GET_R1(OP);
 			return;
-		} else if ((OP&0xFC000000) == 0x74000000) {
-			RS = GET_RS(OP);
-			OP_TYPE = NEXT_L;
-			OP_EX = &Core::op_next;
-			OP_PRNT = &Core::prnt_next;
+		case 5:
+			OP_TYPE = JR_L;
+			OP_EX = &Core::op_jr;
+			OP_PRNT = &Core::prnt_jr;
 			return;
-		} else if ((OP&0xFC000000) == 0x78000000) {
-			RS = GET_RS(OP);
-			RT = GET_RT(OP);
+		case 6:
 			OP_TYPE = ACC_L;
 			OP_EX = &Core::op_acc;
 			OP_PRNT = &Core::prnt_acc;
+			switch((OP>>21)&7) {
+			case 1:
+				R0 = 29;
+				break;
+			case 2:
+				R0 = 30;
+				break;
+			case 4:
+				R0 = 31;
+				break;
+			default:
+				fprintf(stderr, "examine_op: acc: a0 invalid\n");
+				STOP = 1;
+			}
+			R1 = GET_R1(OP);
 			return;
-		} else if ((OP&0xFC000000) == 0x7C000000) {
+		case 7:
 			if (!PARALLEL) {
-				RT = GET_RT(OP);
-				RD = GET_RD(OP);
 				OP_TYPE = FORK_L;
 				OP_EX = &Core::op_fork;
 				OP_PRNT = &Core::prnt_fork;
+				R1 = GET_R1(OP);
+				R2 = GET_R2(OP);
 			} else {
 				OP_TYPE = END_L;
 				OP_EX = &Core::op_end;
@@ -313,66 +285,68 @@ void Core::examine_op(void) {
 			return;
 		}
 		break;
-	case 4:
-		if ((OP&0xFC000000) == 0x8C000000) {
-			RT = GET_RT(OP);
-			RS = GET_RS(OP);
-			C = (int16_t)OP;
-			OP_TYPE = LW_L;
-			OP_EX = &Core::op_lw;
-			OP_PRNT = &Core::prnt_lw;
-			return;
-		}
-		break;
-	case 5:
-		if ((OP&0xFC000000) == 0xAC000000) {
-			RT = GET_RT(OP);
-			RS = GET_RS(OP);
-			C = (int16_t)OP;
-			OP_TYPE = SW_L;
-			OP_EX = &Core::op_sw;
-			OP_PRNT = &Core::prnt_sw;
-			return;
-		}
-		break;
-	case 6:
-		if ((OP&0xFC000000) == 0xC0000000) {
-			RS = GET_RS(OP);
-			FT = GET_RT(OP);
-			OP_TYPE = ITOF_L;
-			OP_EX = &Core::op_itof;
-			OP_PRNT = &Core::prnt_itof;
-			return;
-		} else if ((OP&0xFC000000) == 0xC4000000) {
-			RS = GET_RS(OP);
-			FT = GET_FT(OP);
-			C = (int16_t)OP;
-			OP_TYPE = LW_S_L;
-			OP_EX = &Core::op_lw_s;
-			OP_PRNT = &Core::prnt_lw_s;
-			return;
-		}
-		break;
-	case 7:
-		if ((OP&0xFC000000) == 0xE0000000) {
-			FS = GET_RS(OP);
-			RT = GET_RT(OP);
-			OP_TYPE = FTOI_L;
-			OP_EX = &Core::op_ftoi;
-			OP_PRNT = &Core::prnt_ftoi;
-			return;
-		} else if ((OP&0xFC000000) == 0xE4000000) {
-			RS = GET_RS(OP);
-			FT = GET_FT(OP);
-			C = (int16_t)OP;
-			OP_TYPE = SW_S_L;
-			OP_EX = &Core::op_sw_s;
-			OP_PRNT = &Core::prnt_sw_s;
-			return;
-		}
-		break;
 	default:
-		break;
+		switch((OP>>28)&7) {
+		case 0:
+			OP_TYPE = J_L;
+			OP_EX = &Core::op_j;
+			OP_PRNT = &Core::prnt_j;
+			C = GET_C_J(OP);
+			return;
+		case 1:
+			OP_TYPE = JAL_L;
+			OP_EX = &Core::op_jal;
+			OP_PRNT = &Core::prnt_jal;
+			C = GET_C_J(OP);
+			return;
+		case 2:
+			OP_TYPE = FBZ_L;
+			OP_EX = &Core::op_fbz;
+			OP_PRNT = &Core::prnt_fbz;
+			R1 = GET_R1(OP);
+			C = GET_C_J(OP);
+			return;
+		case 3:
+			OP_TYPE = FBLE_L;
+			OP_EX = &Core::op_fble;
+			OP_PRNT = &Core::prnt_fble;
+			R1 = GET_R1(OP);
+			R2 = GET_R2(OP);
+			C = GET_C_J(OP);
+			return;
+		case 4:
+			OP_TYPE = BE_L;
+			OP_EX = &Core::op_be;
+			OP_PRNT = &Core::prnt_be;
+			R1 = GET_R1(OP);
+			R2 = GET_R2(OP);
+			C = GET_C_J(OP);
+			return;
+		case 5:
+			OP_TYPE = BEI_L;
+			OP_EX = &Core::op_bei;
+			OP_PRNT = &Core::prnt_bei;
+			R1 = GET_R1(OP);
+			C2 = GET_C2(OP);
+			C = GET_C_J(OP);
+			return;
+		case 6:
+			OP_TYPE = BLE_L;
+			OP_EX = &Core::op_ble;
+			OP_PRNT = &Core::prnt_ble;
+			R1 = GET_R1(OP);
+			R2 = GET_R2(OP);
+			C = GET_C_J(OP);
+			return;
+		case 7:
+			OP_TYPE = BLEI_L;
+			OP_EX = &Core::op_blei;
+			OP_PRNT = &Core::prnt_blei;
+			R1 = GET_R1(OP);
+			C2 = GET_C2(OP);
+			C = GET_C_J(OP);
+			return;
+		}
 	}
 	fprintf(stderr, "unknown operator\n");
 	STOP = 1;
