@@ -5,10 +5,7 @@
 using namespace std;
 #define MV2TKN(p) while(*p == ' ' || *p == '\t' || *p == ',') p++
 #define MV2TKNB(p) while(*p == ' ' || *p == '\t') p++
-#define MV2SP(p) while(*p != ' ' && *p != '\t' && *p != ',' && *p != '\n') p++
-#define MV2NXTKN(p) MV2SP(p); MV2TKN(p)
-#define MV2NXTKNB(p) MV2SP(p); MV2TKNB(p)
-#define GO2EL(p) while(*p != '\n') p++
+#define MV2SP(p) while(*p != ' ' && *p != '\t' && *p != ',' && *p != '\n' && *p != ')') p++
 
 
 #define STORE_OP \
@@ -99,7 +96,14 @@ using namespace std;
 
 #define GETCL(c) \
 	if ('0' <= *p && *p <= '9' || *p == '-') GETC(c) \
-	else GETL(c)
+	else GETL(c) \
+	if (*p == '(') { \
+		int l; \
+		p++; \
+		GETL(l) \
+		if (*(p++) != ')') throw "invalid arguments"; \
+		c += l; \
+	}
 
 
 extern int TA, DA;
