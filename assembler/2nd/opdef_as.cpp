@@ -215,6 +215,19 @@ void op_sl2addi(char *p) {
 	return;
 }
 
+void op_sl2(char *p) {  //今のところ擬似命令(sl2addiに変換)
+	uint32_t op;
+	char r0, r1;
+	GETRN(r0);
+	MV2TKN(p);
+	GETRN(r1);
+	MV2TKNB(p);
+	NLCHK;
+	op = 0x14000000 | (r0 << 21) | (r1 << 16);
+	STORE_OP;
+	return;
+}
+
 void op_mov(char *p) {
 	uint32_t op;
 	char r0, r1;
@@ -624,6 +637,7 @@ map<string, void (*) (char *) > SZM = {
 //	{"subi", sz_gop},
 	{"sl2add", sz_gop},
 	{"sl2addi", sz_gop},
+	{"sl2", sz_gop},
 	{"mov", sz_gop},
 	{"movi", sz_gop},
 	{"fadd", sz_gop},
@@ -671,6 +685,7 @@ map<string, void (*) (char *) > OPM = {
 //	{"subi", op_subi},
 	{"sl2add", op_sl2add},
 	{"sl2addi", op_sl2addi},
+	{"sl2", op_sl2},
 	{"mov", op_mov},
 	{"movi", op_movi},
 	{"fadd", op_fadd},
