@@ -76,6 +76,34 @@ using namespace std;
 		} \
 	} else throw "invalid arguments"
 
+#define GETAN(an) \
+	int an; \
+	if (*(p++) != '%' || *(p++) != 'f') throw "invalid register"; \
+	if ('0' == *p || ('4' <= *p && *p <= '9')) { \
+		an = *p - '0'; \
+		p++; \
+		TECHK; \
+	} else if (*p == '1' || *p == '2') { \
+		p++; \
+		if ('0' <= *p && *p <= '9') { \
+			an = (*(p-1) - '0') * 10 + *p - '0'; \
+			p++; \
+			TECHK; \
+		} else { \
+			an = *(p-1) - '0'; \
+			TECHK; \
+		} \
+	} else if (*p == '3') { \
+		p++; \
+		if ('0' == *p || *p == '1') { \
+			an = 30 + *p - '0'; \
+			p++; \
+			TECHK; \
+		} else { \
+			an = 3; \
+			TECHK; \
+		} \
+	} else throw "invalid register"; \
 
 #define GETC(c) { \
 	char *q; \
@@ -163,7 +191,7 @@ void op_sub(char *p) {
 	STORE_OP;
 	return;
 }
-
+/*
 void op_subi(char *p) {
 	uint32_t op;
 	char r0, r2;
@@ -179,7 +207,7 @@ void op_subi(char *p) {
 	STORE_OP;
 	return;
 }
-
+*/
 void op_sl2add(char *p) {
 	uint32_t op;
 	char r0, r1, r2;
@@ -552,7 +580,50 @@ void op_ble(char *p) { OP_BE(0xe0000000); }
 
 void op_blei(char *p) { OP_BEI(0xf0000000); }
 
+void op_next(char *p) {
+	unit32_t op;
+	char r0;
+	GETRN(r0);
+	MV2TKNB(p);
+	NLCHK;
+	op = 0x74000000 | (r0 << 21);
+	STORE_OP;
+	return;
+}
 
+void op_acc(char *p) {
+	unit32_t op;
+	char a0, f1;
+	GETAN(a0);
+	MV2TKN(p);
+	GETFN(f1);
+	MV2TKNB(p);
+	NLCHK;
+	op = 0x78000000 | (a0 << 21) | (f1 << 16);
+	STORE_OP;
+	return;
+}
+
+void op_fork(char *p) {
+	unit32_t op;
+	char r1, r2;
+	GETRN(r1);
+	MV2TKN(p);
+	GETRN(r2);
+	MV2TKNB(p);
+	NLCHK;
+	op = 0x7C000000 | (r1 << 16) | (r2 << 11);
+	STORE_OP;
+	return;
+}
+
+void op_end(char *p) {
+	unit32_t op;
+	NLCHK;
+	op = 0x7C000000;
+	STORE_OP;
+	return;
+}
 
 
 map<string, void (*) (char *) > SZM = {
@@ -561,7 +632,7 @@ map<string, void (*) (char *) > SZM = {
 	{"add", sz_gop},
 	{"addi", sz_gop},
 	{"sub", sz_gop},
-	{"subi", sz_gop},
+//	{"subi", sz_gop},
 	{"sl2add", sz_gop},
 	{"sl2addi", sz_gop},
 	{"mov", sz_gop},
@@ -596,6 +667,10 @@ map<string, void (*) (char *) > SZM = {
 	{"bei", sz_gop},
 	{"ble", sz_gop},
 	{"blei", sz_gop},
+	{"next", sz_gop},
+	{"acc", sz_gop},
+	{"fork", sz_gop},
+	{"end", sz_gop}
 };
 
 map<string, void (*) (char *) > OPM = {
@@ -604,7 +679,7 @@ map<string, void (*) (char *) > OPM = {
 	{"add", op_add},
 	{"addi", op_addi},
 	{"sub", op_sub},
-	{"subi", op_subi},
+//	{"subi", op_subi},
 	{"sl2add", op_sl2add},
 	{"sl2addi", op_sl2addi},
 	{"mov", op_mov},
@@ -639,6 +714,10 @@ map<string, void (*) (char *) > OPM = {
 	{"bei", op_bei},
 	{"ble", op_ble},
 	{"blei", op_blei},
+	{"next", op_next},
+	{"acc", op_acc},
+	{"fork", op_fork},
+	{"end", op_end}
 };
 
 
