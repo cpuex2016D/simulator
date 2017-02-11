@@ -98,7 +98,7 @@ using namespace std;
 }
 
 #define GETCL(c) \
-	if ('0' <= *p && *p <= '9') GETC(c) \
+	if ('0' <= *p && *p <= '9' || *p == '-') GETC(c) \
 	else GETL(c)
 
 
