@@ -76,6 +76,31 @@ using namespace std;
 		} \
 	} else throw "invalid arguments"
 
+#define GETAN(an) \
+	int an; \
+	if (*(p++) != '%' || *(p++) != 'f') throw "invalid register"; \
+	if ('0' == *p || ('4' <= *p && *p <= '9')) { \
+		an = *p - '0'; \
+		p++; \
+	} else if (*p == '1' || *p == '2') { \
+		p++; \
+		if ('0' <= *p && *p <= '9') { \
+			an = (*(p-1) - '0') * 10 + *p - '0'; \
+			p++; \
+		} else { \
+			an = *(p-1) - '0'; \
+		} \
+	} else if (*p == '3') { \
+		p++; \
+		if ('0' == *p || *p == '1') { \
+			an = 30 + *p - '0'; \
+			p++; \
+		} else { \
+			an = 3; \
+		} \
+	} else throw "invalid register"; \
+	if (*p != ',' && *p != ' ' && *p != '\n' && *p != '\t') throw "invalid register"; \
+	MV2TKN(p)
 
 #define SET_RDRSRT \
 	GETRN(rd); \
@@ -734,12 +759,52 @@ void op_la(char *p) {
 	return;
 }
 
+void op_next(char *p) {
+	unit32_t op;
+	char r0;
+	GETRN(r0);
+	NLCHK;
+	op = 0x74000000 | (r0 << 21);
+	STORE_OP;
+	return;
+}
+
+void op_acc(char *p) {
+	unit32_t op;
+	char a0, f1;
+	GETAN(a0);
+	GETFN(f1);
+	NLCHK;
+	op = 0x78000000 | (a0 << 21) | (f1 << 16);
+	STORE_OP;
+	return;
+}
+
+void op_fork(char *p) {
+	unit32_t op;
+	char r1, r2;
+	GETRN(r1);
+	GETRN(r2);
+	NLCHK;
+	op = 0x7C000000 | (r1 << 16) | (r2 << 11);
+	STORE_OP;
+	return;
+}
+
+void op_end(char *p) {
+	unit32_t op;
+	NLCHK;
+	op = 7C000000;
+	STORE_OP;
+	return;
+}
 
 
 
-map<string, void (*) (char *) > SZM = {{".align", nop}, {".global", nop}, {"add", sz_gop}, {"addi", sz_gop}, {"sub", sz_gop}, {"and", sz_gop}, {"andi", sz_gop}, {"or", sz_gop}, {"ori", sz_gop}, {"nor", sz_gop}, {"sll", sz_gop}, {"srl", sz_gop}, {"slt", sz_gop}, {"slti", sz_gop}, {"beq", sz_gop}, {"bne", sz_gop}, {"j", sz_gop}, {"jal", sz_gop}, {"jr", sz_gop}, {"jalr", sz_gop}, {"lw", sz_gop}, {"lui", sz_gop}, {"sw", sz_gop}, {"in", sz_gop}, {"out", sz_gop}, {"bt.s", sz_gop}, {"bf.s", sz_gop}, {"add.s", sz_gop}, {"sub.s", sz_gop}, {"mul.s", sz_gop}, {"div.s", sz_gop}, {"mov.s", sz_gop}, {"neg.s", sz_gop}, {"abs.s", sz_gop}, {"sqrt.s", sz_gop}, {"c.eq.s", sz_gop}, {"c.lt.s", sz_gop}, {"c.le.s", sz_gop}, {"lw.s", sz_gop}, {"sw.s", sz_gop}, {"ftoi", sz_gop}, {"itof", sz_gop}, {"la", sz_la}};
 
-map<string, void (*) (char *) > OPM = {{".align", nop}, {".global", nop}, {"add", op_add}, {"addi", op_addi}, {"sub", op_sub}, {"and", op_and}, {"andi", op_andi}, {"or", op_or}, {"ori", op_ori}, {"nor", op_nor}, {"sll", op_sll}, {"srl", op_srl}, {"slt", op_slt}, {"slti", op_slti}, {"beq", op_beq}, {"bne", op_bne}, {"j", op_j}, {"jal", op_jal}, {"jr", op_jr}, {"jalr", op_jalr}, {"lw", op_lw}, {"lui", op_lui}, {"sw", op_sw}, {"in", op_in}, {"out", op_out}, {"bt.s", op_bt_s}, {"bf.s", op_bf_s}, {"add.s", op_add_s}, {"sub.s", op_sub_s}, {"mul.s", op_mul_s}, {"div.s", op_div_s}, {"mov.s", op_mov_s}, {"neg.s", op_neg_s}, {"abs.s", op_abs_s}, {"sqrt.s", op_sqrt_s}, {"c.eq.s", op_c_eq_s}, {"c.lt.s", op_c_lt_s}, {"c.le.s", op_c_le_s}, {"lw.s", op_lw_s}, {"sw.s", op_sw_s}, {"ftoi", op_ftoi}, {"itof", op_itof}, {"la", op_la}};
+map<string, void (*) (char *) > SZM = {{".align", nop}, {".global", nop}, {"add", sz_gop}, {"addi", sz_gop}, {"sub", sz_gop}, {"and", sz_gop}, {"andi", sz_gop}, {"or", sz_gop}, {"ori", sz_gop}, {"nor", sz_gop}, {"sll", sz_gop}, {"srl", sz_gop}, {"slt", sz_gop}, {"slti", sz_gop}, {"beq", sz_gop}, {"bne", sz_gop}, {"j", sz_gop}, {"jal", sz_gop}, {"jr", sz_gop}, {"jalr", sz_gop}, {"lw", sz_gop}, {"lui", sz_gop}, {"sw", sz_gop}, {"in", sz_gop}, {"out", sz_gop}, {"bt.s", sz_gop}, {"bf.s", sz_gop}, {"add.s", sz_gop}, {"sub.s", sz_gop}, {"mul.s", sz_gop}, {"div.s", sz_gop}, {"mov.s", sz_gop}, {"neg.s", sz_gop}, {"abs.s", sz_gop}, {"sqrt.s", sz_gop}, {"c.eq.s", sz_gop}, {"c.lt.s", sz_gop}, {"c.le.s", sz_gop}, {"lw.s", sz_gop}, {"sw.s", sz_gop}, {"ftoi", sz_gop}, {"itof", sz_gop}, {"la", sz_la}, {"next", sz_gop}, {"acc", sz_gop}, {"folk", sz_gop}, {"end", sz_gop}};
+
+map<string, void (*) (char *) > OPM = {{".align", nop}, {".global", nop}, {"add", op_add}, {"addi", op_addi}, {"sub", op_sub}, {"and", op_and}, {"andi", op_andi}, {"or", op_or}, {"ori", op_ori}, {"nor", op_nor}, {"sll", op_sll}, {"srl", op_srl}, {"slt", op_slt}, {"slti", op_slti}, {"beq", op_beq}, {"bne", op_bne}, {"j", op_j}, {"jal", op_jal}, {"jr", op_jr}, {"jalr", op_jalr}, {"lw", op_lw}, {"lui", op_lui}, {"sw", op_sw}, {"in", op_in}, {"out", op_out}, {"bt.s", op_bt_s}, {"bf.s", op_bf_s}, {"add.s", op_add_s}, {"sub.s", op_sub_s}, {"mul.s", op_mul_s}, {"div.s", op_div_s}, {"mov.s", op_mov_s}, {"neg.s", op_neg_s}, {"abs.s", op_abs_s}, {"sqrt.s", op_sqrt_s}, {"c.eq.s", op_c_eq_s}, {"c.lt.s", op_c_lt_s}, {"c.le.s", op_c_le_s}, {"lw.s", op_lw_s}, {"sw.s", op_sw_s}, {"ftoi", op_ftoi}, {"itof", op_itof}, {"la", op_la}, {"next", op_next}, {"acc", op_acc}, {"folk", op_folk}, {"end", op_end}};
 
 
 
