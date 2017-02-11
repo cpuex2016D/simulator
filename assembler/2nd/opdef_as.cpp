@@ -76,34 +76,6 @@ using namespace std;
 		} \
 	} else throw "invalid arguments"
 
-#define GETAN(an) \
-	int an; \
-	if (*(p++) != '%' || *(p++) != 'f') throw "invalid register"; \
-	if ('0' == *p || ('4' <= *p && *p <= '9')) { \
-		an = *p - '0'; \
-		p++; \
-		TECHK; \
-	} else if (*p == '1' || *p == '2') { \
-		p++; \
-		if ('0' <= *p && *p <= '9') { \
-			an = (*(p-1) - '0') * 10 + *p - '0'; \
-			p++; \
-			TECHK; \
-		} else { \
-			an = *(p-1) - '0'; \
-			TECHK; \
-		} \
-	} else if (*p == '3') { \
-		p++; \
-		if ('0' == *p || *p == '1') { \
-			an = 30 + *p - '0'; \
-			p++; \
-			TECHK; \
-		} else { \
-			an = 3; \
-			TECHK; \
-		} \
-	} else throw "invalid register"; \
 
 #define GETC(c) { \
 	char *q; \
@@ -581,31 +553,44 @@ void op_ble(char *p) { OP_BE(0xe0000000); }
 void op_blei(char *p) { OP_BEI(0xf0000000); }
 
 void op_next(char *p) {
-	unit32_t op;
+	uint32_t op;
 	char r0;
 	GETRN(r0);
 	MV2TKNB(p);
 	NLCHK;
-	op = 0x74000000 | (r0 << 21);
+	op = 0x0c000000 | (r0 << 21);
 	STORE_OP;
 	return;
 }
 
 void op_acc(char *p) {
-	unit32_t op;
+	uint32_t op;
 	char a0, f1;
-	GETAN(a0);
+	GETFN(a0);
 	MV2TKN(p);
 	GETFN(f1);
 	MV2TKNB(p);
 	NLCHK;
+	switch(a0) {
+	case 29:
+		a0 = 1;
+		break;
+	case 30:
+		a0 = 2;
+		break;
+	case 31:
+		a0 = 4;
+		break;
+	default:
+		throw "acc: a0 invalid";
+	}
 	op = 0x78000000 | (a0 << 21) | (f1 << 16);
 	STORE_OP;
 	return;
 }
 
 void op_fork(char *p) {
-	unit32_t op;
+	uint32_t op;
 	char r1, r2;
 	GETRN(r1);
 	MV2TKN(p);
@@ -618,7 +603,7 @@ void op_fork(char *p) {
 }
 
 void op_end(char *p) {
-	unit32_t op;
+	uint32_t op;
 	NLCHK;
 	op = 0x7C000000;
 	STORE_OP;
