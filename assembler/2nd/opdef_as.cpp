@@ -255,6 +255,21 @@ void op_movi(char *p) {
 	return;
 }
 
+void op_la(char *p) {  //擬似命令(moviに変換)
+	uint32_t op;
+	char r0;
+	int c;
+	GETRN(r0);
+	MV2TKN(p);
+	GETL(c);
+	MV2TKNB(p);
+	NLCHK;
+	if (c >= (1 << 15)) throw "la: too large address";
+	op = 0x1c000000 | (r0 << 21) | (c & 0xffff);
+	STORE_OP;
+	return;
+}
+
 #define OP_FADD(opcode) \
 	uint32_t op; \
 	char f0, f1, f2; \
@@ -640,6 +655,7 @@ map<string, void (*) (char *) > SZM = {
 	{"sl2", sz_gop},
 	{"mov", sz_gop},
 	{"movi", sz_gop},
+	{"la", sz_gop},
 	{"fadd", sz_gop},
 	{"fsub", sz_gop},
 	{"fmul", sz_gop},
@@ -688,6 +704,7 @@ map<string, void (*) (char *) > OPM = {
 	{"sl2", op_sl2},
 	{"mov", op_mov},
 	{"movi", op_movi},
+	{"la", op_la},
 	{"fadd", op_fadd},
 	{"fsub", op_fsub},
 	{"fmul", op_fmul},
