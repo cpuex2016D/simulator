@@ -334,8 +334,8 @@ int simprepare(int argc, char *argv[], int *lastpc) {
 	int fsize, r, rv, fd;
 	char *p;
 	struct stat statbuf;
-	if (argc < 3) {
-		fprintf(stderr, "too few arguments\n");
+	if (argc != 5) {
+		fprintf(stderr, "usage: %s text data pc input > output\n", argv[0]);
 		return 1;
 	}
 	
@@ -400,7 +400,18 @@ int simprepare(int argc, char *argv[], int *lastpc) {
 		memcpy(CORE[i].DAT, CORE[0].DAT, fsize);
 	}
 
-	IFILE = fopen(argv[3], "r");
+	{
+		FILE *pc_file;
+		pc_file = fopen(argv[3], "r");
+		if (pc_file == NULL) {
+			perror(argv[3]);
+			return 1;
+		}
+		fscanf(pc_file, "%d", &CORE[0].PC);
+		fclose(pc_file);
+	}
+
+	IFILE = fopen(argv[4], "r");
 	if (IFILE == NULL) {
 		perror("main");
 		return 1;
