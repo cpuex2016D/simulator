@@ -24,6 +24,7 @@ int STOP;
 int PJ = 0;
 unsigned long long OP_COUNT[OP_TOTAL] = {0};
 unsigned long long COUNTS;
+unsigned long long COUNTS_BY_MODE[2] = {0};
 
 set<int> BREAKPOINTS;
 
@@ -72,6 +73,8 @@ void Core::print_state(void) {
 
 void print_stats(void) {
 	fprintf(stderr, "\n");
+	fprintf(stderr, "single mode:\t%llu\n", COUNTS_BY_MODE[0]);
+	fprintf(stderr, "parallel mode:\t%llu\n", COUNTS_BY_MODE[1]);
 	fprintf(stderr, "add:\t%llu\n", OP_COUNT[ADD_L]);
 	fprintf(stderr, "addi:\t%llu\n", OP_COUNT[ADDI_L]);
 	fprintf(stderr, "sub:\t%llu\n", OP_COUNT[SUB_L]);
@@ -302,6 +305,7 @@ int main(int argc, char *argv[]) {
 		
 		
 		/* execution */
+		COUNTS_BY_MODE[PARALLEL]++;
 		int all_ended = 1;
 		for(int i=0, i0 = PARALLEL ? N_CORE : 1; i<i0; i++) {
 			CORE[i].PC += 1;

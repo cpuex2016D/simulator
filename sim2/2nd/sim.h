@@ -129,8 +129,6 @@ extern int STOP;
 
 extern int PJ;
 enum {ADD_L, ADDI_L, SUB_L, NEXT_L, SL2ADD_L, SL2ADDI_L, MOV_L, MOVI_L, FADD_L, FSUB_L, FMUL_L, FDIV_L, FMOV_L, FNEG_L, FABS_L, FSQRT_L, LW_L, LWI_L, FLW_L, FLWI_L, SW_L, SWI_L, FSW_L, FSWI_L, FTOI_L, ITOF_L, IN_L, FIN_L, OUT_L, JR_L, ACC_L, FORK_L, END_L, ENDED_L, J_L, JAL_L, FBZ_L, FBLE_L, BE_L, BEI_L, BLE_L, BLEI_L, OP_TOTAL};
-extern unsigned long long OP_COUNT[];
-extern int OP_TYPE;
 extern unsigned long long COUNTS;
 
 extern int PARALLEL;
