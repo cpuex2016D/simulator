@@ -105,6 +105,7 @@ void print_stats(void) {
 	fprintf(stderr, "acc:\t%llu\n", OP_COUNT[ACC_L]);
 	fprintf(stderr, "fork:\t%llu\n", OP_COUNT[FORK_L]);
 	fprintf(stderr, "end:\t%llu\n", OP_COUNT[END_L]);
+	fprintf(stderr, "(ended):\t%llu\n", OP_COUNT[ENDED_L]);
 	fprintf(stderr, "j:\t%llu\n", OP_COUNT[J_L]);
 	fprintf(stderr, "jal:\t%llu\n", OP_COUNT[JAL_L]);
 	fprintf(stderr, "fbz:\t%llu\n", OP_COUNT[FBZ_L]);

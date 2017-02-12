@@ -286,11 +286,14 @@ void Core::op_fork(void) {
 }
 
 void Core::op_end(void) {
-	PC = PC - 1;
-	if (!ended) {
-		ended = 1;
-		if (PJ) print_end(PC-1);
-	}
+	PC--;
+	ended = 1;
+	if (PJ) print_end(PC);
+	return;
+}
+
+void Core::op_ended(void) {
+	PC--;
 	return;
 }
 

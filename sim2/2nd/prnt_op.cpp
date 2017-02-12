@@ -135,6 +135,10 @@ void Core::prnt_end(void) {
 	fprintf(stderr, "%d\tend\n", PC);
 	return;
 }
+void Core::prnt_ended(void) {
+	fprintf(stderr, "%d\t(ended)\n", PC);
+	return;
+}
 void Core::prnt_j(void) {
 	fprintf(stderr, "%d\tj\t%d\n", PC, C);
 	return;

@@ -66,6 +66,7 @@ public:
 	void op_acc(void);
 	void op_fork(void);
 	void op_end(void);
+	void op_ended(void);
 	void op_j(void);
 	void op_jal(void);
 	void op_fbz(void);
@@ -108,6 +109,7 @@ public:
 	void prnt_acc(void);
 	void prnt_fork(void);
 	void prnt_end(void);
+	void prnt_ended(void);
 	void prnt_j(void);
 	void prnt_jal(void);
 	void prnt_fbz(void);
@@ -126,7 +128,7 @@ extern FILE *IFILE;
 extern int STOP;
 
 extern int PJ;
-enum {ADD_L, ADDI_L, SUB_L, NEXT_L, SL2ADD_L, SL2ADDI_L, MOV_L, MOVI_L, FADD_L, FSUB_L, FMUL_L, FDIV_L, FMOV_L, FNEG_L, FABS_L, FSQRT_L, LW_L, LWI_L, FLW_L, FLWI_L, SW_L, SWI_L, FSW_L, FSWI_L, FTOI_L, ITOF_L, IN_L, FIN_L, OUT_L, JR_L, ACC_L, FORK_L, END_L, J_L, JAL_L, FBZ_L, FBLE_L, BE_L, BEI_L, BLE_L, BLEI_L, OP_TOTAL};
+enum {ADD_L, ADDI_L, SUB_L, NEXT_L, SL2ADD_L, SL2ADDI_L, MOV_L, MOVI_L, FADD_L, FSUB_L, FMUL_L, FDIV_L, FMOV_L, FNEG_L, FABS_L, FSQRT_L, LW_L, LWI_L, FLW_L, FLWI_L, SW_L, SWI_L, FSW_L, FSWI_L, FTOI_L, ITOF_L, IN_L, FIN_L, OUT_L, JR_L, ACC_L, FORK_L, END_L, ENDED_L, J_L, JAL_L, FBZ_L, FBLE_L, BE_L, BEI_L, BLE_L, BLEI_L, OP_TOTAL};
 extern unsigned long long OP_COUNT[];
 extern int OP_TYPE;
 extern unsigned long long COUNTS;

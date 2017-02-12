@@ -278,9 +278,15 @@ void Core::examine_op(void) {
 				R1 = GET_R1(OP);
 				R2 = GET_R2(OP);
 			} else {
-				OP_TYPE = END_L;
-				OP_EX = &Core::op_end;
-				OP_PRNT = &Core::prnt_end;
+				if (!ended) {
+					OP_TYPE = END_L;
+					OP_EX = &Core::op_end;
+					OP_PRNT = &Core::prnt_end;
+				} else {
+					OP_TYPE = ENDED_L;
+					OP_EX = &Core::op_ended;
+					OP_PRNT = &Core::prnt_ended;
+				}
 			}
 			return;
 		}
