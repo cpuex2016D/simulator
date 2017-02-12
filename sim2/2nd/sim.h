@@ -9,6 +9,7 @@
 class Core {
 public:
 	int my_num;
+	int my_gc;
 	int ended;
 	int PC;
 	uint32_t GPR[32];

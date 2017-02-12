@@ -37,7 +37,7 @@ void Core::op_sub(void) {
 }
 
 void Core::op_next(void) {
-	GPR[R0] = GC;
+	GPR[R0] = my_gc = GC;
 	GC += GD;
 	return;
 }
@@ -265,7 +265,15 @@ void Core::op_acc(void) {
 		STOP = 1;
 		return;
 	}
-	CORE[0].FPR[R0] += FPR[R1];
+	int my_gc_is_first = 1;
+	for (int i=0; i<N_CORE; i++) {
+		if (i != my_num && CORE[i].my_gc > my_gc) my_gc_is_first = 0;
+	}
+	if (my_gc_is_first) {
+		CORE[0].FPR[R0] += FPR[R1];
+	} else {
+		PC--;
+	}
 	return;
 }
 
