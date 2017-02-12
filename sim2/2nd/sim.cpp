@@ -57,7 +57,7 @@ void Core::print_state(void) {
 		"16-19\t%d\t%d\t%d\t%d\n"
 		"20-23\t%d\t%d\t%d\t%d\n"
 		"24-27\t%d\t%d\t%d\t%d\n"
-		"28-31\t%d\t%X\t%X\t%d\n"
+		"28-31\t%d\t%d\t%X\t%X\n"
 		"FPR\n"
 		"0-3\t%f\t%f\t%f\t%f\n"
 		"4-7\t%f\t%f\t%f\t%f\n"
