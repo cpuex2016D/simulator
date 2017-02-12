@@ -407,7 +407,11 @@ int simprepare(int argc, char *argv[], int *lastpc) {
 			perror(argv[3]);
 			return 1;
 		}
-		fscanf(pc_file, "%d", &CORE[0].PC);
+		if (fscanf(pc_file, "%d", &CORE[0].PC) != 1) {
+			fprintf(stderr, "reading pc failed\n");
+			perror("fscanf");
+			return 1;
+		}
 		fclose(pc_file);
 	}
 
