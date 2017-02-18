@@ -322,7 +322,7 @@ void Core::op_jal(void) {
 }
 
 void Core::op_fbz(void) {
-	if (FPR[R1] == 0.0) {
+	if (!(*((uint32_t*)&FPR[R1]) & 0x7fe00000)) {
 		uint32_t PC_from = PC - 1;
 		PC = C;
 		if (PJ) print_jump(PC_from, PC);
