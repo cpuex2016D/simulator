@@ -481,17 +481,17 @@ int main(int argc, char *argv[]) {
 		map<string, int>::iterator itr;
 		itr = LBM.find("entry_point");
 		if (itr == LBM.end()) {
-			fprintf(stderr, "label \"entry_point\" not found\n");
-			return 1;
+			fprintf(stderr, "warning: label \"entry_point\" not found. file \"pc\" will not be generated.\n");
+		} else {
+			FILE *pc_file;
+			pc_file = fopen("pc", "w");
+			if (pc_file == NULL) {
+				perror("fopen(\"pc\", \"w\")");
+				return 1;
+			}
+			fprintf(pc_file, "%d\n", itr->second);
+			fclose(pc_file);
 		}
-		FILE *pc_file;
-		pc_file = fopen("pc", "w");
-		if (pc_file == NULL) {
-			perror("fopen(\"pc\", \"w\")");
-			return 1;
-		}
-		fprintf(pc_file, "%d\n", itr->second);
-		fclose(pc_file);
 	}
 	fclose(numbered_file);
 	free(fc); free(TEX); free(DAT);
