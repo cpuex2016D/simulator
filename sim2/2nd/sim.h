@@ -122,7 +122,6 @@ public:
 
 extern Core CORE[];
 
-extern uint32_t *TEX;
 extern FILE *IFILE;
 
 extern int STOP;

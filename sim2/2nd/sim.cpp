@@ -16,7 +16,8 @@ using namespace std;
 
 Core CORE[N_CORE];
 
-uint32_t *TEX;
+uint32_t *TEX_PARENT;
+uint32_t *TEX_CHILD;
 FILE *IFILE;
 
 int STOP;
@@ -177,7 +178,7 @@ int main(int argc, char *argv[]) {
 	//execution_top:
 		int breakpoint_hit = 0;
 		for(int i=0; i<(PARALLEL ? N_CORE : 1); i++) {
-			CORE[i].OP = TEX[CORE[i].PC];
+			CORE[i].OP = (i==0 ? TEX_PARENT[CORE[i].PC] : TEX_CHILD[CORE[i].PC]);
 			CORE[i].examine_op();
 			if (BREAKPOINTS.find(CORE[i].PC) != BREAKPOINTS.end()) breakpoint_hit = 1;
 		}
@@ -209,7 +210,7 @@ int main(int argc, char *argv[]) {
 						fprintf(stderr, "this command cannot be used in the parallel mode\n");
 					} else {
 						CORE[0].PC = (int)strtol(p1+3, NULL, 0);
-						CORE[0].OP = TEX[CORE[0].PC];
+						CORE[0].OP = TEX_PARENT[CORE[0].PC];
 						CORE[0].examine_op();
 					}
 				} else if (p1[0] == 'p' && p1[1] == 'j') {
@@ -324,7 +325,8 @@ int main(int argc, char *argv[]) {
 	}
 endexec:
 	//print_reg();
-	free(TEX);
+	free(TEX_PARENT);
+	free(TEX_CHILD);
 	return 0;
 }
 
@@ -334,11 +336,12 @@ int simprepare(int argc, char *argv[], int *lastpc) {
 	int fsize, r, rv, fd;
 	char *p;
 	struct stat statbuf;
-	if (argc != 5) {
-		fprintf(stderr, "usage: %s text data pc input > output\n", argv[0]);
+	if (argc != 6) {
+		fprintf(stderr, "usage: %s text_parent text_child data pc input > output\n", argv[0]);
 		return 1;
 	}
-	
+
+	// TEX_PARENT
 	fd = open(argv[1], O_RDONLY);
 	if (fd <= 0) {
 		perror("main");
@@ -350,7 +353,7 @@ int simprepare(int argc, char *argv[], int *lastpc) {
 	}
 	fsize = statbuf.st_size;
 	if (fsize%4 != 0) {
-		fprintf(stderr, "text file size is not multiples of 4\n");
+		fprintf(stderr, "text_parent file size is not multiples of 4\n");
 		return 1;
 	}
 	*lastpc = fsize/4;
@@ -359,7 +362,40 @@ int simprepare(int argc, char *argv[], int *lastpc) {
 		fprintf(stderr, "malloc error\n");
 		return 1;
 	}
-	TEX = (uint32_t *) p;
+	TEX_PARENT = (uint32_t *) p;
+	for(r = fsize; r > 0;) {
+		rv = read(fd, p, r);
+		if (rv < 0) {
+			perror("main");
+			return 1;
+		}
+		r -= rv;
+		p += rv;
+	}
+	close(fd);
+
+	// TEX_PARENT
+	fd = open(argv[2], O_RDONLY);
+	if (fd <= 0) {
+		perror("main");
+		return 1;
+	}
+	if (fstat(fd, &statbuf) != 0) {
+		perror("main");
+		return 1;
+	}
+	fsize = statbuf.st_size;
+	if (fsize%4 != 0) {
+		fprintf(stderr, "text_child file size is not multiples of 4\n");
+		return 1;
+	}
+	*lastpc = fsize/4;
+	p = (char *)malloc(fsize+4);
+	if (p == NULL) {
+		fprintf(stderr, "malloc error\n");
+		return 1;
+	}
+	TEX_CHILD = (uint32_t *) p;
 	for(r = fsize; r > 0;) {
 		rv = read(fd, p, r);
 		if (rv < 0) {
@@ -371,7 +407,7 @@ int simprepare(int argc, char *argv[], int *lastpc) {
 	}
 	close(fd);
 	
-	fd = open(argv[2], O_RDONLY);
+	fd = open(argv[3], O_RDONLY);
 	if (fd <= 0) {
 		perror("main");
 		return 1;
@@ -402,9 +438,9 @@ int simprepare(int argc, char *argv[], int *lastpc) {
 
 	{
 		FILE *pc_file;
-		pc_file = fopen(argv[3], "r");
+		pc_file = fopen(argv[4], "r");
 		if (pc_file == NULL) {
-			perror(argv[3]);
+			perror(argv[4]);
 			return 1;
 		}
 		if (fscanf(pc_file, "%d", &CORE[0].PC) != 1) {
@@ -415,7 +451,7 @@ int simprepare(int argc, char *argv[], int *lastpc) {
 		fclose(pc_file);
 	}
 
-	IFILE = fopen(argv[4], "r");
+	IFILE = fopen(argv[5], "r");
 	if (IFILE == NULL) {
 		perror("main");
 		return 1;
