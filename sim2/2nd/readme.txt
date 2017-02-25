@@ -1,6 +1,6 @@
-./sim text data ifile >output
+./sim text_parent text_child data pc ifile > output
 のようにして実行
-GPRは%r29, %r30だけ16進数表示にしてある
+GPRは%r30, %r31だけ16進数表示にしてある
 
 
 そのままenterで直前と同様の内容で実行
