@@ -2,7 +2,7 @@
 #define _SIM_H
 
 #include<stdio.h>
-#define N_CORE 4
+#define N_CORE 7
 #define DAT_WORD_SIZE (1 << 17)
 #define DAT_BYTE_SIZE (DAT_WORD_SIZE * 4)
 #define ADDR_STACK_SIZE 16
